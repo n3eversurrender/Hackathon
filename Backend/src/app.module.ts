@@ -14,6 +14,7 @@ import { CourseModule } from './features/course/course.module';
 import { UserModule } from './features/user/user.module';
 import { CourseScheduleModule } from './features/course-schedule/course-schedule.module';
 import { SessionsModule } from './features/sessions/sessions.module';
+import { AttendanceModule } from './features/attendance/attendance.module';
 
 @Module({
   imports: [
@@ -32,6 +33,7 @@ import { SessionsModule } from './features/sessions/sessions.module';
     CourseModule,
     CourseScheduleModule,
     SessionsModule,
+    AttendanceModule,
   ],
   controllers: [AppController],
   providers: [AppService, NotificationListener],
