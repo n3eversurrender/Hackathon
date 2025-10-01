@@ -1,5 +1,6 @@
 import { RouterModule } from '@nestjs/core';
 import { AuthModule } from 'src/features/auth/auth.module';
+import { CourseScheduleModule } from 'src/features/course-schedule/course-schedule.module';
 import { CourseModule } from 'src/features/course/course.module';
 import { UserModule } from 'src/features/user/user.module';
 
@@ -18,6 +19,12 @@ export default RouterModule.register([
       {
         path: 'courses',
         module: CourseModule,
+        children: [
+          {
+            path: ':coursesId/schedules',
+            module: CourseScheduleModule,
+          },
+        ],
       },
     ],
   },
