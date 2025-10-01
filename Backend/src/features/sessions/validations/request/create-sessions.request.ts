@@ -1,0 +1,10 @@
+import * as Joi from 'joi';
+
+export const createSessionsSchema = Joi.object({
+  course_id: Joi.number().required(),
+  schedule_id: Joi.number().required(),
+  date: Joi.string().required(),
+  start_time: Joi.string().required(),
+  end_time: Joi.string().required(),
+  qr_code: Joi.string().required(),
+});

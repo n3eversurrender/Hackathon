@@ -13,6 +13,7 @@ import { AuthModule } from './features/auth/auth.module';
 import { CourseModule } from './features/course/course.module';
 import { UserModule } from './features/user/user.module';
 import { CourseScheduleModule } from './features/course-schedule/course-schedule.module';
+import { SessionsModule } from './features/sessions/sessions.module';
 
 @Module({
   imports: [
@@ -30,6 +31,7 @@ import { CourseScheduleModule } from './features/course-schedule/course-schedule
     ScheduleModule.forRoot(),
     CourseModule,
     CourseScheduleModule,
+    SessionsModule,
   ],
   controllers: [AppController],
   providers: [AppService, NotificationListener],
