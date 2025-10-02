@@ -2,22 +2,29 @@ import { CommonModule } from '@angular/common';
 import { Component } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
+import { AuthService } from '../../services/auth.service';
+import { ToastService } from '../../services/toast.service';
 
 @Component({
   selector: 'app-register',
   imports: [CommonModule, FormsModule],
-  templateUrl: './register.html'
+  templateUrl: './register.html',
 })
 export class RegisterComponent {
-  name: string = '';
-  email: string = '';
-  username: string = '';
-  password: string = '';
-  confirmPassword: string = '';
-  showPassword: boolean = false;
-  showConfirmPassword: boolean = false;
+  name = '';
+  email = '';
+  username = '';
+  password = '';
+  confirmPassword = '';
+  showPassword = false;
+  showConfirmPassword = false;
+  isLoading = false;
 
-  constructor(private router: Router) {}
+  constructor(
+    private router: Router,
+    private authService: AuthService,
+    private toastService: ToastService,
+  ) {}
 
   togglePassword(): void {
     this.showPassword = !this.showPassword;
@@ -29,25 +36,48 @@ export class RegisterComponent {
 
   onSubmit(): void {
     // Validation
-    if (!this.name || !this.email || !this.username || !this.password || !this.confirmPassword) {
-      alert('Semua field harus diisi!');
+    if (!this.name || !this.email || !this.password || !this.confirmPassword) {
+      this.toastService.error('Field Nama, Email, dan Password harus diisi!', 'Validasi Gagal');
+      return;
+    }
+
+    if (this.password.length < 8) {
+      this.toastService.error('Password minimal 8 karakter!', 'Validasi Gagal');
       return;
     }
 
     if (this.password !== this.confirmPassword) {
-      alert('Password dan Konfirmasi Password tidak sama!');
+      this.toastService.error('Password dan Konfirmasi Password tidak sama!', 'Validasi Gagal');
       return;
     }
 
-    // TODO: Connect to API later
-    console.log('Register attempt:', {
+    this.isLoading = true;
+
+    const registerData = {
       name: this.name,
       email: this.email,
-      username: this.username,
-      password: this.password
+      password: this.password,
+      ...(this.username && { username: this.username }),
+      role: 1, // Default to Student role (1)
+    };
+
+    this.authService.register(registerData).subscribe({
+      next: (response) => {
+        this.isLoading = false;
+        console.log('Register success:', response);
+        this.toastService.success(
+          `Selamat datang, ${this.name}! Silakan login dengan akun Anda.`,
+          'Registrasi Berhasil!',
+        );
+        setTimeout(() => {
+          this.router.navigate(['/login']);
+        }, 1500);
+      },
+      error: (error) => {
+        this.isLoading = false;
+        console.error('Register error:', error);
+        this.toastService.error(error.message, 'Registrasi Gagal');
+      },
     });
-    
-    // For now, just show alert for demo
-    alert(`Register demo:\nNama: ${this.name}\nEmail: ${this.email}\nUsername: ${this.username}\n\nAPI connection will be added later.`);
   }
 }
