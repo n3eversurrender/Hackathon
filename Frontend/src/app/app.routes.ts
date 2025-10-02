@@ -4,6 +4,7 @@ import { RegisterComponent } from './features/auth/register/register';
 import { DashboardComponent } from './features/dashboard/dashboard';
 import { ManageClassesComponent } from './features/manage-classes/manage-classes';
 import { ManageUsersComponent } from './features/manage-users/manage-users';
+import { SettingsComponent } from './features/settings/settings';
 
 export const routes: Routes = [
   { path: '', redirectTo: '/login', pathMatch: 'full' },
@@ -12,4 +13,5 @@ export const routes: Routes = [
   { path: 'dashboard', component: DashboardComponent },
   { path: 'manage-users', component: ManageUsersComponent },
   { path: 'manage-classes', component: ManageClassesComponent },
+  { path: 'settings', component: SettingsComponent },
 ];

@@ -128,6 +128,8 @@ export class ManageUsersComponent implements OnInit {
       this.router.navigate(['/dashboard']);
     } else if (menu === 'kelola-kelas') {
       this.router.navigate(['/manage-classes']);
+    } else if (menu === 'pengaturan') {
+      this.router.navigate(['/settings']);
     }
   }
 

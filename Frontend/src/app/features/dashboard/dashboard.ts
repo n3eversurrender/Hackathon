@@ -123,6 +123,8 @@ export class DashboardComponent implements OnInit {
       this.router.navigate(['/manage-users']);
     } else if (menu === 'kelola-kelas') {
       this.router.navigate(['/manage-classes']);
+    } else if (menu === 'pengaturan') {
+      this.router.navigate(['/settings']);
     }
   }
 
