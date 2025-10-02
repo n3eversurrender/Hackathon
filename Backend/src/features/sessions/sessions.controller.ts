@@ -9,9 +9,11 @@ import {
   Query,
   UseGuards,
 } from '@nestjs/common';
+import { CurrentUser } from 'src/cores/decorators/current-user.decorator';
 import { JwtAuthGuard } from 'src/cores/guards/jwt-auth.guard';
 import { JoiValidationParamPipe } from 'src/cores/validators/pipes/joi-validation-param.pipe';
 import { JoiValidationPipe } from 'src/cores/validators/pipes/joi-validation.pipe';
+import { User } from 'src/features/user/entities/user.entity';
 import { CreateSessionDto } from './dto/create-session.dto';
 import { UpdateSessionDto } from './dto/update-session.dto';
 import { Session } from './entities/session.entity';
@@ -26,8 +28,8 @@ export class SessionsController {
 
   @UseGuards(JwtAuthGuard)
   @Get()
-  async findAll(@Query() query: any) {
-    return this.sessionsService.findAll(query);
+  async findAll(@Query() query: any, @CurrentUser() user: User) {
+    return this.sessionsService.findAll(query, user);
   }
 
   @UseGuards(JwtAuthGuard)
@@ -44,8 +46,9 @@ export class SessionsController {
   async create(
     @Body(new JoiValidationPipe(createSessionsSchema))
     body: CreateSessionDto,
+    @CurrentUser() user: User,
   ) {
-    return this.sessionsService.create(body);
+    return this.sessionsService.create(body, user);
   }
 
   @UseGuards(JwtAuthGuard)

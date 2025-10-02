@@ -20,23 +20,37 @@ export class CourseScheduleService {
 
   async findAll(query: any, courseId: number, user: User) {
     const condition: any = { course_id: courseId };
+    const includeOptions: any = [
+      {
+        association: 'course',
+        required: false,
+      },
+    ];
 
     // If user is lecturer, filter schedules to only show schedules from their courses
     if (user.role === UserRoleEnum.LECTURER) {
       Object.assign(condition, {
         '$course.lecturer_id$': user.id,
       });
+      // Make course join required when filtering by lecturer
+      includeOptions[0].required = true;
     }
     // Admin and students can see all schedules
 
     try {
-      const { count, data } = await new QueryBuilderHelper(
+      const queryBuilder = new QueryBuilderHelper(
         this.courseScheduleModel,
         query,
       )
         .where(condition)
-        .load('course')
-        .getResult();
+        .options({ include: includeOptions });
+
+      // Set subQuery to false when using nested conditions to ensure proper filtering
+      if (user.role === UserRoleEnum.LECTURER) {
+        queryBuilder.setSubQuery(false);
+      }
+
+      const { count, data } = await queryBuilder.getResult();
 
       const result = {
         count: count,
