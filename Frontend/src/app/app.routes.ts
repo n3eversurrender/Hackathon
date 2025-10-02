@@ -1,6 +1,6 @@
 import { Routes } from '@angular/router';
-import { LoginComponent } from './pages/login/login';
-import { RegisterComponent } from './pages/register/register';
+import { LoginComponent } from './features/auth/login/login';
+import { RegisterComponent } from './features/auth/register/register';
 
 export const routes: Routes = [
   { path: '', redirectTo: '/login', pathMatch: 'full' },
