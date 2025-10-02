@@ -218,16 +218,28 @@
   *ngIf="showModal"
   class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
   (click)="closeModal()"
+  tabindex="0"
+  (keyup.escape)="closeModal()"
+  aria-modal="true"
+  role="dialog"
 >
   <div
     class="bg-white rounded-2xl shadow-xl w-full max-w-md mx-4"
     (click)="$event.stopPropagation()"
+    tabindex="0"
+    (keyup.escape)="closeModal()"
+    role="document"
   >
     <!-- Modal Header -->
     <div class="bg-[#7D2E2E] text-white px-6 py-4 rounded-t-2xl flex items-center justify-between">
-      <h3 class="text-lg font-bold">{{ modalTitle }}</h3>
-      <button (click)="closeModal()" class="hover:bg-[#8D3E3E] rounded-full p-1 transition-colors">
-        <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 20 20">
+      <h3 class="text-lg font-bold" id="modalTitle">{{ modalTitle }}</h3>
+      <button 
+        (click)="closeModal()" 
+        class="hover:bg-[#8D3E3E] rounded-full p-1 transition-colors"
+        aria-label="Tutup"
+        type="button"
+      >
+        <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true">
           <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"/>
         </svg>
       </button>
@@ -236,8 +248,9 @@
     <!-- Modal Body -->
     <div class="p-6 space-y-4">
       <div>
-        <label class="block text-[#7D2E2E] font-semibold mb-2">Nama Lengkap</label>
+        <label for="input-nama" class="block text-[#7D2E2E] font-semibold mb-2">Nama Lengkap</label>
         <input
+          id="input-nama"
           type="text"
           [(ngModel)]="formData.nama"
           class="w-full border-2 border-[#7D2E2E] rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-[#7D2E2E]"
@@ -246,8 +259,9 @@
       </div>
 
       <div>
-        <label class="block text-[#7D2E2E] font-semibold mb-2">NIM</label>
+        <label for="input-nim" class="block text-[#7D2E2E] font-semibold mb-2">NIM</label>
         <input
+          id="input-nim"
           type="text"
           [(ngModel)]="formData.nim"
           class="w-full border-2 border-[#7D2E2E] rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-[#7D2E2E]"
@@ -256,8 +270,9 @@
       </div>
 
       <div>
-        <label class="block text-[#7D2E2E] font-semibold mb-2">Email</label>
+        <label for="input-email" class="block text-[#7D2E2E] font-semibold mb-2">Email</label>
         <input
+          id="input-email"
           type="email"
           [(ngModel)]="formData.email"
           class="w-full border-2 border-[#7D2E2E] rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-[#7D2E2E]"
@@ -266,8 +281,9 @@
       </div>
 
       <div>
-        <label class="block text-[#7D2E2E] font-semibold mb-2">Kelas</label>
+        <label for="input-kelas" class="block text-[#7D2E2E] font-semibold mb-2">Kelas</label>
         <input
+          id="input-kelas"
           type="text"
           [(ngModel)]="formData.kelas"
           class="w-full border-2 border-[#7D2E2E] rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-[#7D2E2E]"
@@ -276,8 +292,9 @@
       </div>
 
       <div>
-        <label class="block text-[#7D2E2E] font-semibold mb-2">Role</label>
+        <label for="input-role" class="block text-[#7D2E2E] font-semibold mb-2">Role</label>
         <select
+          id="input-role"
           [(ngModel)]="formData.role"
           class="w-full border-2 border-[#7D2E2E] rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-[#7D2E2E]"
         >
@@ -292,16 +309,17 @@
       <button
         (click)="closeModal()"
         class="px-4 py-2 border-2 border-[#7D2E2E] text-[#7D2E2E] rounded-lg hover:bg-gray-100 transition-colors"
+        type="button"
       >
         Batal
       </button>
       <button
         (click)="saveUser()"
         class="px-4 py-2 bg-[#7D2E2E] text-white rounded-lg hover:bg-[#6D1E1E] transition-colors"
+        type="button"
       >
         {{ isEditMode ? 'Update' : 'Simpan' }}
       </button>
     </div>
   </div>
 </div>
-

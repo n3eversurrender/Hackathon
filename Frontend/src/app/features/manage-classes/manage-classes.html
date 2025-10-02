@@ -114,8 +114,7 @@
     <!-- Header -->
     <header class="bg-white shadow-sm px-8 py-4 flex justify-between items-center">
       <div class="text-[#7D2E2E]">
-        <h1 class="text-xl font-bold">Selamat Datang Dudi!</h1>
-        <p class="text-sm">{{ currentDate }}</p>
+        <h2 class="text-lg font-semibold">{{ currentDate }}</h2>
       </div>
       <div class="flex items-center gap-3">
         <span class="text-[#7D2E2E] font-medium">Halo, {{ currentUser }}!</span>
@@ -249,10 +248,14 @@
   *ngIf="showModal"
   class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
   (click)="closeModal()"
+  tabindex="0"
+  (keydown.escape)="closeModal()"
 >
   <div
     class="bg-white rounded-2xl shadow-xl w-full max-w-2xl mx-4"
     (click)="$event.stopPropagation()"
+    tabindex="0"
+    (keydown.escape)="closeModal()"
   >
     <!-- Modal Header -->
     <div
@@ -261,7 +264,12 @@
       <h3 class="text-xl font-bold text-[#7D2E2E]">{{ modalTitle }}</h3>
       <button
         (click)="closeModal()"
+        (keyup.enter)="closeModal()"
+        (keydown.enter)="closeModal()"
         class="text-[#7D2E2E] hover:bg-gray-100 rounded-full p-1 transition-colors"
+        title="Tutup"
+        tabindex="0"
+        aria-label="Tutup"
       >
         <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 20 20">
           <path
@@ -281,6 +289,7 @@
           [(ngModel)]="formData.namaKelas"
           class="w-full border-2 border-[#7D2E2E] rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-[#7D2E2E] text-[#7D2E2E]"
           placeholder="Nama Kelas"
+          aria-label="Nama Kelas"
         />
       </div>
 
@@ -290,13 +299,17 @@
           [(ngModel)]="formData.kodeKelas"
           class="w-full border-2 border-[#7D2E2E] rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-[#7D2E2E] text-[#7D2E2E]"
           placeholder="Kode Kelas"
+          aria-label="Kode Kelas"
         />
       </div>
 
       <div class="flex justify-end">
         <button
           (click)="saveClass()"
+          (keyup.enter)="saveClass()"
+          (keydown.enter)="saveClass()"
           class="px-8 py-2 bg-[#7D2E2E] text-white rounded-lg hover:bg-[#6D1E1E] transition-colors font-semibold"
+          tabindex="0"
         >
           Tambah
         </button>
