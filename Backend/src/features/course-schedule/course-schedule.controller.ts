@@ -41,7 +41,7 @@ export class CourseScheduleController {
   @UseGuards(JwtAuthGuard)
   @Get(':id')
   async findOne(
-    @Param('id', new JoiValidationParamPipe(scheduleIdParamSchema))
+    @Param(new JoiValidationParamPipe(scheduleIdParamSchema))
     schedule: CourseSchedule,
   ) {
     return this.courseScheduleService.findOne(schedule);
@@ -61,7 +61,7 @@ export class CourseScheduleController {
   @UseGuards(JwtAuthGuard)
   @Put(':id')
   async update(
-    @Param('id', new JoiValidationParamPipe(scheduleIdParamSchema))
+    @Param(new JoiValidationParamPipe(scheduleIdParamSchema))
     schedule: CourseSchedule,
     @Body(new JoiValidationPipe(updateScheduleSchema))
     body: UpdateCourseScheduleDto,
@@ -72,7 +72,7 @@ export class CourseScheduleController {
   @UseGuards(JwtAuthGuard)
   @Delete(':id')
   async remove(
-    @Param('id', new JoiValidationParamPipe(scheduleIdParamSchema))
+    @Param(new JoiValidationParamPipe(scheduleIdParamSchema))
     schedule: CourseSchedule,
   ) {
     return this.courseScheduleService.remove(schedule);

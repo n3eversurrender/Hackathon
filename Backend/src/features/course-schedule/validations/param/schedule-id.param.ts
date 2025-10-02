@@ -3,7 +3,7 @@ import { CourseSchedule } from '../../entities/course-schedule.entity';
 
 export const scheduleIdExrenal = async (value) => {
   const schedule = await CourseSchedule.findOne({
-    where: { id: value },
+    where: { id: value.id, course_id: value.coursesId },
   });
 
   if (!schedule) {

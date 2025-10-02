@@ -56,16 +56,16 @@ export class Session extends Model {
   date: string;
 
   @Column({
-    type: DataType.DATE,
+    type: DataType.TIME,
     allowNull: false,
   })
-  start_time: Date;
+  start_time: string;
 
   @Column({
-    type: DataType.DATE,
+    type: DataType.TIME,
     allowNull: false,
   })
-  end_time: Date;
+  end_time: string;
 
   @Column({
     type: DataType.TEXT,

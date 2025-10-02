@@ -32,10 +32,6 @@ export const registerSchema = Joi.object({
     }),
   password: Joi.string().min(8),
   role: Joi.number()
-    .valid(
-      UserRoleEnum.USER,
-      UserRoleEnum.CLEANING_SERVICE,
-      UserRoleEnum.MANAGEMENT,
-    )
+    .valid(UserRoleEnum.ADMIN, UserRoleEnum.STUDENT, UserRoleEnum.LECTURER)
     .optional(),
 }).options({ abortEarly: false });
