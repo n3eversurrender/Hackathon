@@ -6,13 +6,13 @@ import { Router } from '@angular/router';
 @Component({
   selector: 'app-login',
   imports: [CommonModule, FormsModule],
-  templateUrl: './login.html'
+  templateUrl: './login.html',
 })
 export class LoginComponent {
-  username: string = '';
-  password: string = '';
-  showPassword: boolean = false;
-  
+  username = '';
+  password = '';
+  showPassword = false;
+
   // Simple QR code pattern for illustration
   qrPattern: boolean[][] = [
     [true, true, true, true, true, true, true, true],
@@ -35,9 +35,9 @@ export class LoginComponent {
     // TODO: Connect to API later
     console.log('Login attempt:', {
       username: this.username,
-      password: this.password
+      password: this.password,
     });
-    
+
     // For now, just show alert for demo
     if (this.username && this.password) {
       alert(`Login demo:\nUsername: ${this.username}\n\nAPI connection will be added later.`);
