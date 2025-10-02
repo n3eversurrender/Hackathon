@@ -27,8 +27,8 @@ export class CourseController {
 
   @UseGuards(JwtAuthGuard)
   @Get()
-  async findAll(@Query() query: any) {
-    return this.courseService.findAll(query);
+  async findAll(@Query() query: any, @CurrentUser() user: any) {
+    return this.courseService.findAll(query, user);
   }
 
   @UseGuards(JwtAuthGuard)

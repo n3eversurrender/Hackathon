@@ -3,6 +3,8 @@ import { InjectModel } from '@nestjs/sequelize';
 import { Sequelize } from 'sequelize-typescript';
 import { QueryBuilderHelper } from 'src/cores/helpers/query-builder.helper';
 import { ResponseHelper } from 'src/cores/helpers/response.helper';
+import { User } from 'src/features/user/entities/user.entity';
+import UserRoleEnum from 'src/features/user/enums/user-role.enum';
 import { CreateCourseDto } from './dto/create-course.dto';
 import { UpdateCourseDto } from './dto/update-course.dto';
 import { Course } from './entities/course.entity';
@@ -16,12 +18,25 @@ export class CourseService {
     private readonly courseModel: typeof Course,
   ) {}
 
-  async findAll(query: any) {
+  async findAll(query: any, user: User) {
+    const condition = {};
+
+    // Only show courses created by the lecturer themselves
+    if (user.role === UserRoleEnum.LECTURER) {
+      Object.assign(condition, {
+        lecturer_id: user.id,
+      });
+    }
+    // Admin can see all courses, students can see all courses (no filter)
+
     try {
       const { count, data } = await new QueryBuilderHelper(
         this.courseModel,
         query,
-      ).getResult();
+      )
+        .where(condition)
+        .load('lecturer')
+        .getResult();
 
       const result = {
         count: count,
@@ -40,6 +55,13 @@ export class CourseService {
 
   async findOne(course: Course) {
     try {
+      await course.reload({
+        include: [
+          {
+            association: 'lecturer',
+          },
+        ],
+      });
       return this.response.success(course, 200, 'Successfully get course');
     } catch (error) {
       return this.response.fail(error, 400);
