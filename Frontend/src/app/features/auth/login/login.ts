@@ -38,9 +38,9 @@ export class LoginComponent {
       password: this.password,
     });
 
-    // For now, just show alert for demo
+    // For now, just navigate to dashboard
     if (this.username && this.password) {
-      alert(`Login demo:\nUsername: ${this.username}\n\nAPI connection will be added later.`);
+      this.router.navigate(['/dashboard']);
     } else {
       alert('Please fill in all fields');
     }
