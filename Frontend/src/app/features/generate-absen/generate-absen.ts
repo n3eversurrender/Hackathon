@@ -2,6 +2,7 @@ import { CommonModule } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
+import { MainLayoutComponent } from '../../shared/layouts/main-layout/main-layout.component';
 
 interface Class {
   id: number;
@@ -31,7 +32,7 @@ interface SessionFormData {
 @Component({
   selector: 'app-generate-absen',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, MainLayoutComponent],
   templateUrl: './generate-absen.html',
 })
 export class GenerateAbsenComponent implements OnInit {
@@ -156,21 +157,6 @@ export class GenerateAbsenComponent implements OnInit {
     const minutes = String(now.getMinutes()).padStart(2, '0');
 
     this.currentDate = `${dayName}, ${day} ${month} ${year} ${hours}:${minutes}`;
-  }
-
-  setActiveMenu(menu: string): void {
-    this.activeMenu = menu;
-    if (menu === 'beranda') {
-      this.router.navigate(['/dashboard']);
-    } else if (menu === 'kelola-kelas') {
-      this.router.navigate(['/manage-classes']);
-    } else if (menu === 'kelola-user') {
-      this.router.navigate(['/manage-users']);
-    } else if (menu === 'riwayat-absen') {
-      this.router.navigate(['/attendance-history']);
-    } else if (menu === 'pengaturan') {
-      this.router.navigate(['/settings']);
-    }
   }
 
   updateSessionStatuses(): void {
@@ -315,12 +301,6 @@ export class GenerateAbsenComponent implements OnInit {
     if (confirm(`Apakah Anda yakin ingin menghapus sesi ${session.namaKelas}?`)) {
       this.sessions = this.sessions.filter((s) => s.id !== session.id);
       alert('Sesi berhasil dihapus!');
-    }
-  }
-
-  logout(): void {
-    if (confirm('Apakah Anda yakin ingin keluar?')) {
-      this.router.navigate(['/login']);
     }
   }
 }
