@@ -4,5 +4,5 @@ export class CreateSessionDto {
   date: string;
   start_time: string;
   end_time: string;
-  qr_code: string;
+  qr_code?: string; // Optional - will be auto-generated
 }

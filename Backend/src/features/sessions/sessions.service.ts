@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/sequelize';
 import { Sequelize } from 'sequelize-typescript';
+import { QRCodeHelper } from 'src/cores/helpers/qrcode.helper';
 import { QueryBuilderHelper } from 'src/cores/helpers/query-builder.helper';
 import { ResponseHelper } from 'src/cores/helpers/response.helper';
 import { Course } from 'src/features/course/entities/course.entity';
@@ -15,6 +16,7 @@ export class SessionsService {
   constructor(
     private readonly response: ResponseHelper,
     private readonly sequelize: Sequelize,
+    private readonly qrcodeHelper: QRCodeHelper,
     @InjectModel(Session)
     private readonly sessionModel: typeof Session,
     @InjectModel(Course)
@@ -111,16 +113,50 @@ export class SessionsService {
         }
       }
 
+      // Create session first (without QR code)
       const session = await this.sessionModel.create(
-        { ...body },
+        {
+          course_id: body.course_id,
+          schedule_id: body.schedule_id,
+          date: body.date,
+          start_time: body.start_time,
+          end_time: body.end_time,
+          qr_code: null, // Will be generated below
+        },
         { transaction },
       );
 
+      // Generate unique token for this session
+      const token = this.qrcodeHelper.generateSessionToken(
+        session.id,
+        body.course_id,
+        body.date,
+      );
+
+      // Create QR data string
+      const qrDataString = this.qrcodeHelper.createSessionQRData(
+        session.id,
+        token,
+      );
+
+      // Generate QR code image (base64 data URL)
+      const qrCodeDataURL =
+        await this.qrcodeHelper.generateQRCode(qrDataString);
+
+      // Update session with QR code
+      await session.update({ qr_code: qrCodeDataURL }, { transaction });
+
       await transaction.commit();
+
+      // Reload session with relations
+      await session.reload({
+        include: [{ association: 'course' }, { association: 'schedule' }],
+      });
+
       return this.response.success(
         session,
         201,
-        'Successfully create session',
+        'Successfully create session with QR code',
       );
     } catch (error) {
       await transaction.rollback();
