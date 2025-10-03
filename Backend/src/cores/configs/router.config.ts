@@ -3,6 +3,7 @@ import { AttendanceModule } from 'src/features/attendance/attendance.module';
 import { AuthModule } from 'src/features/auth/auth.module';
 import { CourseScheduleModule } from 'src/features/course-schedule/course-schedule.module';
 import { CourseModule } from 'src/features/course/course.module';
+import { DashboardModule } from 'src/features/dashboard/dashboard.module';
 import { SessionsModule } from 'src/features/sessions/sessions.module';
 import { UserModule } from 'src/features/user/user.module';
 
@@ -35,6 +36,10 @@ export default RouterModule.register([
       {
         path: 'attendances',
         module: AttendanceModule,
+      },
+      {
+        path: 'dashboard',
+        module: DashboardModule,
       },
     ],
   },

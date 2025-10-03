@@ -9,12 +9,13 @@ import routerConfig from './cores/configs/router.config';
 import { sequelizeConfigAsync } from './cores/configs/sequelize.config';
 import { NotificationListener } from './cores/event-emitter/notification.listener';
 import { ResponseModule } from './cores/modules/response/response.module';
-import { AuthModule } from './features/auth/auth.module';
-import { CourseModule } from './features/course/course.module';
-import { UserModule } from './features/user/user.module';
-import { CourseScheduleModule } from './features/course-schedule/course-schedule.module';
-import { SessionsModule } from './features/sessions/sessions.module';
 import { AttendanceModule } from './features/attendance/attendance.module';
+import { AuthModule } from './features/auth/auth.module';
+import { CourseScheduleModule } from './features/course-schedule/course-schedule.module';
+import { CourseModule } from './features/course/course.module';
+import { DashboardModule } from './features/dashboard/dashboard.module';
+import { SessionsModule } from './features/sessions/sessions.module';
+import { UserModule } from './features/user/user.module';
 
 @Module({
   imports: [
@@ -34,6 +35,7 @@ import { AttendanceModule } from './features/attendance/attendance.module';
     CourseScheduleModule,
     SessionsModule,
     AttendanceModule,
+    DashboardModule,
   ],
   controllers: [AppController],
   providers: [AppService, NotificationListener],
