@@ -3,31 +3,14 @@ import { Component, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { MainLayoutComponent } from '../../shared/layouts/main-layout/main-layout.component';
-
-interface Class {
-  id: number;
-  namaKelas: string;
-  kodeKelas: string;
-}
-
-interface Session {
-  id: number;
-  namaKelas: string;
-  kodeKelas: string;
-  jam: string;
-  jamMulai: string;
-  jamSelesai: string;
-  status: string;
-  durasiWaktu: number; // in minutes
-}
-
-interface SessionFormData {
-  id: number;
-  kodeKelas: string;
-  jamMulai: string;
-  jamSelesai: string;
-  durasiWaktu: number;
-}
+import { ToastService } from '../../shared/toast.service';
+import { AuthService } from '../auth/auth.service';
+import { CourseService } from '../manage-classes/course.service';
+import { Course } from '../manage-classes/course.model';
+import { CourseScheduleService } from '../manage-classes/course-schedule.service';
+import { CourseSchedule, DAY_NAMES } from '../manage-classes/course-schedule.model';
+import { Session } from './session.model';
+import { SessionService } from './session.service';
 
 @Component({
   selector: 'app-generate-absen',
@@ -38,97 +21,65 @@ interface SessionFormData {
 export class GenerateAbsenComponent implements OnInit {
   currentDate: string = '';
   currentUser: string = 'Dudi';
+  activeMenu: string = 'generate-absen';
 
   // Modal states
   showModal: boolean = false;
   showViewModal: boolean = false;
   isEditMode: boolean = false;
-  modalTitle: string = 'Tambah Sesi Absen';
+  modalTitle: string = 'Generate Sesi Absen';
+
+  // Loading states
+  isLoading: boolean = false;
+  isSaving: boolean = false;
+  isLoadingSchedules: boolean = false;
 
   // Form data
-  formData: SessionFormData = {
+  formData: {
+    id: number;
+    course_id: number;
+    schedule_id: number;
+    date: string;
+  } = {
     id: 0,
-    kodeKelas: '',
-    jamMulai: '',
-    jamSelesai: '',
-    durasiWaktu: 30,
+    course_id: 0,
+    schedule_id: 0,
+    date: '',
   };
 
   // View data
-  viewData: Session = {
-    id: 0,
-    namaKelas: '',
-    kodeKelas: '',
-    jam: '',
-    jamMulai: '',
-    jamSelesai: '',
-    status: '',
-    durasiWaktu: 0,
-  };
+  viewData: Session | null = null;
 
-  // Available classes
-  availableClasses: Class[] = [
-    {
-      id: 1,
-      namaKelas: 'Mata Kuliah AI',
-      kodeKelas: 'IF01A',
-    },
-    {
-      id: 2,
-      namaKelas: 'Mata Kuliah IOT',
-      kodeKelas: 'IF01B',
-    },
-    {
-      id: 3,
-      namaKelas: 'Mata Kuliah Website',
-      kodeKelas: 'IF01C',
-    },
-  ];
+  // Data
+  courses: Course[] = [];
+  schedules: CourseSchedule[] = [];
+  sessions: Session[] = [];
+  dayNames = DAY_NAMES;
 
-  // Sessions data
-  sessions: Session[] = [
-    {
-      id: 1,
-      namaKelas: 'Mata Kuliah AI',
-      kodeKelas: 'IF01A',
-      jam: '01:00 PM - 04:00PM',
-      jamMulai: '13:00',
-      jamSelesai: '16:00',
-      status: '5 Menit Lagi',
-      durasiWaktu: 30,
-    },
-    {
-      id: 2,
-      namaKelas: 'Mata Kuliah IOT',
-      kodeKelas: 'IF01B',
-      jam: '01:00 PM - 04:00PM',
-      jamMulai: '13:00',
-      jamSelesai: '16:00',
-      status: 'Sudah Habis',
-      durasiWaktu: 30,
-    },
-    {
-      id: 3,
-      namaKelas: 'Mata Kuliah Website',
-      kodeKelas: 'IF01C',
-      jam: '01:00 PM - 04:00PM',
-      jamMulai: '13:00',
-      jamSelesai: '16:00',
-      status: 'Sudah Habis',
-      durasiWaktu: 30,
-    },
-  ];
-
-  activeMenu: string = 'generate-absen';
-
-  constructor(private router: Router) {}
+  constructor(
+    private router: Router,
+    private courseService: CourseService,
+    private courseScheduleService: CourseScheduleService,
+    private sessionService: SessionService,
+    private toastService: ToastService,
+    private authService: AuthService,
+  ) {}
 
   ngOnInit(): void {
     this.setCurrentDate();
-    // Update session statuses periodically
+    this.loadCourses();
+    this.loadSessions();
+
+    // Get current user
+    const user = this.authService.getCurrentUser();
+    if (user) {
+      this.currentUser = user.name;
+    }
+
+    // Update current date every minute
     setInterval(() => {
-      this.updateSessionStatuses();
-    }, 60000); // Update every minute
+      this.setCurrentDate();
+    }, 60000);
   }
 
   setCurrentDate(): void {
@@ -159,61 +110,66 @@ export class GenerateAbsenComponent implements OnInit {
     this.currentDate = `${dayName}, ${day} ${month} ${year} ${hours}:${minutes}`;
   }
 
-  updateSessionStatuses(): void {
-    const now = new Date();
-    this.sessions.forEach((session) => {
-      const [startHour, startMinute] = session.jamMulai.split(':').map(Number);
-      const sessionStart = new Date();
-      sessionStart.setHours(startHour, startMinute, 0, 0);
-
-      const timeDiff = sessionStart.getTime() - now.getTime();
-      const minutesDiff = Math.floor(timeDiff / (1000 * 60));
-
-      if (minutesDiff <= 5 && minutesDiff > 0) {
-        session.status = '5 Menit Lagi';
-      } else if (minutesDiff <= 0) {
-        session.status = 'Sudah Habis';
-      } else {
-        session.status = `${minutesDiff} Menit Lagi`;
-      }
+  loadCourses(): void {
+    this.courseService.getCourses().subscribe({
+      next: (response) => {
+        this.courses = response.data.courses;
+      },
+      error: (error) => {
+        this.toastService.error(error.message, 'Gagal Memuat Kelas');
+      },
     });
   }
 
-  formatTime(time: string): string {
-    const [hours, minutes] = time.split(':');
-    const hour = parseInt(hours);
-    const ampm = hour >= 12 ? 'PM' : 'AM';
-    const hour12 = hour % 12 || 12;
-    return `${String(hour12).padStart(2, '0')}:${minutes} ${ampm}`;
+  loadSessions(): void {
+    this.isLoading = true;
+    this.sessionService.getSessions().subscribe({
+      next: (response) => {
+        this.isLoading = false;
+        this.sessions = response.data.sessions;
+      },
+      error: (error) => {
+        this.isLoading = false;
+        if (error.status !== 404) {
+          this.toastService.error(error.message, 'Gagal Memuat Sesi');
+        }
+        this.sessions = [];
+      },
+    });
   }
 
-  onClassChange(): void {
-    // You can do additional logic here if needed when class changes
+  onCourseChange(): void {
+    if (this.formData.course_id) {
+      this.isLoadingSchedules = true;
+      this.courseScheduleService.getSchedulesByCourse(this.formData.course_id).subscribe({
+        next: (response) => {
+          this.isLoadingSchedules = false;
+          this.schedules = response.data.schedules;
+          this.formData.schedule_id = 0; // Reset schedule selection
+        },
+        error: (error) => {
+          this.isLoadingSchedules = false;
+          this.toastService.error(error.message, 'Gagal Memuat Jadwal');
+          this.schedules = [];
+        },
+      });
+    } else {
+      this.schedules = [];
+      this.formData.schedule_id = 0;
+    }
   }
 
   openAddModal(): void {
     this.isEditMode = false;
-    this.modalTitle = 'Tambah Sesi Absen';
+    this.modalTitle = 'Generate Sesi Absen';
+    const today = new Date().toISOString().split('T')[0];
     this.formData = {
       id: 0,
-      kodeKelas: '',
-      jamMulai: '',
-      jamSelesai: '',
-      durasiWaktu: 30,
+      course_id: 0,
+      schedule_id: 0,
+      date: today,
     };
-    this.showModal = true;
-  }
-
-  openEditModal(session: Session): void {
-    this.isEditMode = true;
-    this.modalTitle = 'Edit Sesi Absen';
-    this.formData = {
-      id: session.id,
-      kodeKelas: session.kodeKelas,
-      jamMulai: session.jamMulai,
-      jamSelesai: session.jamSelesai,
-      durasiWaktu: session.durasiWaktu,
-    };
+    this.schedules = [];
     this.showModal = true;
   }
 
@@ -221,86 +177,165 @@ export class GenerateAbsenComponent implements OnInit {
     this.showModal = false;
     this.formData = {
       id: 0,
-      kodeKelas: '',
-      jamMulai: '',
-      jamSelesai: '',
-      durasiWaktu: 30,
+      course_id: 0,
+      schedule_id: 0,
+      date: '',
     };
+    this.schedules = [];
   }
 
   saveSession(): void {
-    if (
-      !this.formData.kodeKelas ||
-      !this.formData.jamMulai ||
-      !this.formData.jamSelesai ||
-      !this.formData.durasiWaktu
-    ) {
-      alert('Harap isi semua field!');
+    if (!this.formData.course_id || !this.formData.schedule_id || !this.formData.date) {
+      this.toastService.warning('Harap isi semua field!', 'Perhatian');
       return;
     }
 
-    const selectedClass = this.availableClasses.find(
-      (cls) => cls.kodeKelas === this.formData.kodeKelas,
-    );
-
-    if (!selectedClass) {
-      alert('Kelas tidak ditemukan!');
+    // Get selected schedule to extract times
+    const selectedSchedule = this.schedules.find((s) => s.id === this.formData.schedule_id);
+    if (!selectedSchedule) {
+      this.toastService.error('Jadwal tidak ditemukan!', 'Error');
       return;
     }
 
-    const jamFormatted = `${this.formatTime(this.formData.jamMulai)} - ${this.formatTime(
-      this.formData.jamSelesai,
-    )}`;
+    this.isSaving = true;
 
-    if (this.isEditMode) {
-      // Update existing session
-      const index = this.sessions.findIndex((s) => s.id === this.formData.id);
-      if (index !== -1) {
-        this.sessions[index] = {
-          id: this.formData.id,
-          namaKelas: selectedClass.namaKelas,
-          kodeKelas: selectedClass.kodeKelas,
-          jam: jamFormatted,
-          jamMulai: this.formData.jamMulai,
-          jamSelesai: this.formData.jamSelesai,
-          status: this.sessions[index].status,
-          durasiWaktu: this.formData.durasiWaktu,
-        };
-        alert('Sesi berhasil diupdate!');
-      }
-    } else {
-      // Add new session
-      const newSession: Session = {
-        id: Math.max(...this.sessions.map((s) => s.id), 0) + 1,
-        namaKelas: selectedClass.namaKelas,
-        kodeKelas: selectedClass.kodeKelas,
-        jam: jamFormatted,
-        jamMulai: this.formData.jamMulai,
-        jamSelesai: this.formData.jamSelesai,
-        status: 'Belum Dimulai',
-        durasiWaktu: this.formData.durasiWaktu,
-      };
-      this.sessions.push(newSession);
-      alert('Sesi berhasil ditambahkan!');
-    }
+    const sessionData = {
+      course_id: this.formData.course_id,
+      schedule_id: this.formData.schedule_id,
+      date: this.formData.date,
+      start_time: selectedSchedule.start_time,
+      end_time: selectedSchedule.end_time,
+    };
 
-    this.updateSessionStatuses();
-    this.closeModal();
+    this.sessionService.createSession(sessionData).subscribe({
+      next: (_response) => {
+        this.isSaving = false;
+        this.toastService.success('Sesi berhasil di-generate dengan QR Code!', 'Berhasil');
+        this.loadSessions();
+        this.closeModal();
+      },
+      error: (error) => {
+        this.isSaving = false;
+        this.toastService.error(error.message, 'Gagal Generate Sesi');
+      },
+    });
   }
 
   viewSession(session: Session): void {
-    this.viewData = { ...session };
+    this.viewData = session;
     this.showViewModal = true;
   }
 
   closeViewModal(): void {
     this.showViewModal = false;
+    this.viewData = null;
   }
 
   deleteSession(session: Session): void {
-    if (confirm(`Apakah Anda yakin ingin menghapus sesi ${session.namaKelas}?`)) {
-      this.sessions = this.sessions.filter((s) => s.id !== session.id);
-      alert('Sesi berhasil dihapus!');
+    if (
+      confirm(
+        `Apakah Anda yakin ingin menghapus sesi ${session.course?.name || 'ini'}?`,
+      )
+    ) {
+      this.sessionService.deleteSession(session.id).subscribe({
+        next: (_response) => {
+          this.toastService.success('Sesi berhasil dihapus!', 'Berhasil');
+          this.loadSessions();
+        },
+        error: (error) => {
+          this.toastService.error(error.message, 'Gagal Menghapus');
+        },
+      });
+    }
+  }
+
+  formatTime(time: string): string {
+    if (!time) return '';
+    const parts = time.split(':');
+    if (parts.length >= 2) {
+      let hours = parseInt(parts[0], 10);
+      const minutes = parts[1];
+      const ampm = hours >= 12 ? 'PM' : 'AM';
+
+      hours = hours % 12;
+      hours = hours ? hours : 12;
+
+      return `${hours.toString().padStart(2, '0')}:${minutes} ${ampm}`;
+    }
+    return time;
+  }
+
+  formatDate(dateStr: string): string {
+    const date = new Date(dateStr);
+    const days = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'];
+    const months = [
+      'Januari',
+      'Februari',
+      'Maret',
+      'April',
+      'Mei',
+      'Juni',
+      'Juli',
+      'Agustus',
+      'September',
+      'Oktober',
+      'November',
+      'Desember',
+    ];
+
+    return `${days[date.getDay()]}, ${date.getDate()} ${months[date.getMonth()]} ${date.getFullYear()}`;
+  }
+
+  downloadQRCode(session: Session): void {
+    if (!session.qr_code) {
+      this.toastService.warning('QR Code tidak tersedia', 'Perhatian');
+      return;
+    }
+
+    // Create download link
+    const link = document.createElement('a');
+    link.href = session.qr_code;
+    link.download = `QR-${session.course?.code || session.id}-${session.date}.png`;
+    link.click();
+
+    this.toastService.success('QR Code berhasil diunduh!', 'Berhasil');
+  }
+
+  printQRCode(session: Session): void {
+    if (!session.qr_code) {
+      this.toastService.warning('QR Code tidak tersedia', 'Perhatian');
+      return;
+    }
+
+    const printWindow = window.open('', '_blank');
+    if (printWindow) {
+      printWindow.document.write(`
+        <html>
+          <head>
+            <title>QR Code - ${session.course?.name || 'Session'}</title>
+            <style>
+              body {
+                font-family: Arial, sans-serif;
+                text-align: center;
+                padding: 20px;
+              }
+              h2 { color: #7D2E2E; }
+              img { max-width: 400px; margin: 20px 0; }
+              .info { margin: 10px 0; font-size: 14px; }
+            </style>
+          </head>
+          <body>
+            <h2>${session.course?.name || 'Sesi Absensi'}</h2>
+            <div class="info"><strong>Kode:</strong> ${session.course?.code || '-'}</div>
+            <div class="info"><strong>Tanggal:</strong> ${this.formatDate(session.date)}</div>
+            <div class="info"><strong>Waktu:</strong> ${this.formatTime(session.start_time)} - ${this.formatTime(session.end_time)}</div>
+            <img src="${session.qr_code}" alt="QR Code" />
+            <p>Scan QR code ini untuk absensi</p>
+          </body>
+        </html>
+      `);
+      printWindow.document.close();
+      printWindow.print();
     }
   }
 }
