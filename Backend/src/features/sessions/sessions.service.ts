@@ -1,9 +1,11 @@
 import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/sequelize';
+import { Op } from 'sequelize';
 import { Sequelize } from 'sequelize-typescript';
 import { QRCodeHelper } from 'src/cores/helpers/qrcode.helper';
-import { QueryBuilderHelper } from 'src/cores/helpers/query-builder.helper';
 import { ResponseHelper } from 'src/cores/helpers/response.helper';
+import { Attendance } from 'src/features/attendance/entities/attendance.entity';
+import { CourseSchedule } from 'src/features/course-schedule/entities/course-schedule.entity';
 import { Course } from 'src/features/course/entities/course.entity';
 import { User } from 'src/features/user/entities/user.entity';
 import UserRoleEnum from 'src/features/user/enums/user-role.enum';
@@ -24,49 +26,74 @@ export class SessionsService {
   ) {}
 
   async findAll(query: any, user: User) {
-    const condition = {};
-    const includeOptions: any = [
-      {
-        association: 'course',
-        required: false,
-      },
-      {
-        association: 'schedule',
-        required: false,
-      },
-    ];
-
-    if (user.role === UserRoleEnum.LECTURER) {
-      Object.assign(condition, {
-        '$course.lecturer_id$': user.id,
-      });
-      // Make course join required when filtering by lecturer
-      includeOptions[0].required = true;
-    }
-
     try {
-      const queryBuilder = new QueryBuilderHelper(this.sessionModel, query)
-        .where(condition)
-        .options({ include: includeOptions });
+      const whereCondition: any = {};
 
-      // Set subQuery to false when using nested conditions to ensure proper filtering
-      if (user.role === UserRoleEnum.LECTURER) {
-        queryBuilder.setSubQuery(false);
+      // Add course filter if provided
+      if (query.course_id) {
+        whereCondition.course_id = parseInt(query.course_id);
       }
 
-      const { count, data } = await queryBuilder.getResult();
+      // Add date range filter if provided
+      if (query.date_from || query.date_to) {
+        whereCondition.date = {};
+        if (query.date_from) {
+          whereCondition.date[Op.gte] = query.date_from;
+        }
+        if (query.date_to) {
+          whereCondition.date[Op.lte] = query.date_to;
+        }
+      }
 
-      const result = {
-        count: count,
-        sessions: data,
-      };
+      // Add lecturer filter if user is lecturer
+      if (user.role === UserRoleEnum.LECTURER) {
+        whereCondition['$course.lecturer_id$'] = user.id;
+      }
+
+      const includeOptions: any = [
+        {
+          model: Course,
+          as: 'course',
+          required: user.role === UserRoleEnum.LECTURER,
+        },
+        {
+          model: CourseSchedule,
+          as: 'schedule',
+          required: false,
+        },
+        {
+          model: Attendance,
+          as: 'attendances',
+          required: false,
+          include: [
+            {
+              model: User,
+              as: 'student',
+              required: false,
+              attributes: ['id', 'name', 'username', 'email'],
+            },
+          ],
+        },
+      ];
+
+      // Direct query without QueryBuilderHelper for custom conditions
+      const result = await this.sessionModel.findAndCountAll({
+        where: whereCondition,
+        include: includeOptions,
+        subQuery: user.role === UserRoleEnum.LECTURER ? false : true,
+        order: [['date', 'DESC']],
+      });
 
       return this.response.success(
-        result,
+        {
+          count: result.count,
+          sessions: result.rows,
+        },
         200,
         'Successfully get all sessions',
       );
     } catch (error) {
+      console.error('Error in findAll sessions:', error);
       return this.response.fail(error, 400);
     }
   }

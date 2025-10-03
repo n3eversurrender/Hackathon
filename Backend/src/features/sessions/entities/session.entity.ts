@@ -4,11 +4,13 @@ import {
   Column,
   DataType,
   ForeignKey,
+  HasMany,
   Model,
   PrimaryKey,
   Table,
 } from 'sequelize-typescript';
 import type { TypeWrapper } from 'src/cores/helpers/type-wrapper';
+import { Attendance } from 'src/features/attendance/entities/attendance.entity';
 import { CourseSchedule } from 'src/features/course-schedule/entities/course-schedule.entity';
 import { Course } from 'src/features/course/entities/course.entity';
 
@@ -48,6 +50,9 @@ export class Session extends Model {
 
   @BelongsTo(() => CourseSchedule, 'schedule_id')
   schedule: TypeWrapper<CourseSchedule>;
+
+  @HasMany(() => Attendance, 'session_id')
+  attendances: TypeWrapper<Attendance[]>;
 
   @Column({
     type: DataType.DATEONLY,
