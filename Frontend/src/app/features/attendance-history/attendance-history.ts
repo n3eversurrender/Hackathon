@@ -3,19 +3,12 @@ import { Component, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { MainLayoutComponent } from '../../shared/layouts/main-layout/main-layout.component';
-
-interface AttendanceRecord {
-  id: number;
-  no: number;
-  nama: string;
-  nim: string;
-  kodeKelas: string;
-  namaKelas: string;
-  jamAbsen: string;
-  tanggal: string;
-  status: 'Hadir' | 'Telat' | 'Tidak Hadir';
-  session: string;
-}
+import { ToastService } from '../../shared/toast.service';
+import { AuthService } from '../auth/auth.service';
+import { Course } from '../manage-classes/course.model';
+import { CourseService } from '../manage-classes/course.service';
+import { AttendanceDetail, SessionWithAttendances } from './attendance-history.model';
+import { AttendanceHistoryService } from './attendance-history.service';
 
 @Component({
   selector: 'app-attendance-history',
@@ -25,137 +18,63 @@ interface AttendanceRecord {
 })
 export class AttendanceHistoryComponent implements OnInit {
   currentDate: string = '';
-  currentUser: string = 'Dudi';
-  activeMenu: string = 'riwayat-absen';
-
-  // Filter states
-  selectedKelas: string = '';
-  selectedDate: string = '';
-  selectedStatus: string = '';
-  searchText: string = '';
+  currentUser: string = 'User';
+  activeMenu: string = 'attendance-history';
 
   // Data
-  attendanceRecords: AttendanceRecord[] = [
-    {
-      id: 1,
-      no: 1,
-      nama: 'Ahmad Fauzi',
-      nim: '2211001',
-      kodeKelas: 'IF01A',
-      namaKelas: 'Mata Kuliah AI',
-      jamAbsen: '13:05',
-      tanggal: '2024-10-03',
-      status: 'Hadir',
-      session: '13:00 - 16:00',
-    },
-    {
-      id: 2,
-      no: 2,
-      nama: 'Siti Nurhaliza',
-      nim: '2211002',
-      kodeKelas: 'IF01A',
-      namaKelas: 'Mata Kuliah AI',
-      jamAbsen: '13:35',
-      tanggal: '2024-10-03',
-      status: 'Telat',
-      session: '13:00 - 16:00',
-    },
-    {
-      id: 3,
-      no: 3,
-      nama: 'Budi Santoso',
-      nim: '2211003',
-      kodeKelas: 'IF01B',
-      namaKelas: 'Mata Kuliah IOT',
-      jamAbsen: '14:10',
-      tanggal: '2024-10-03',
-      status: 'Hadir',
-      session: '14:00 - 17:00',
-    },
-    {
-      id: 4,
-      no: 4,
-      nama: 'Dewi Lestari',
-      nim: '2211004',
-      kodeKelas: 'IF01B',
-      namaKelas: 'Mata Kuliah IOT',
-      jamAbsen: '-',
-      tanggal: '2024-10-03',
-      status: 'Tidak Hadir',
-      session: '14:00 - 17:00',
-    },
-    {
-      id: 5,
-      no: 5,
-      nama: 'Eko Prasetyo',
-      nim: '2211005',
-      kodeKelas: 'IF01C',
-      namaKelas: 'Mata Kuliah Website',
-      jamAbsen: '15:05',
-      tanggal: '2024-10-03',
-      status: 'Hadir',
-      session: '15:00 - 18:00',
-    },
-    {
-      id: 6,
-      no: 6,
-      nama: 'Fitri Handayani',
-      nim: '2211006',
-      kodeKelas: 'IF01A',
-      namaKelas: 'Mata Kuliah AI',
-      jamAbsen: '13:02',
-      tanggal: '2024-10-02',
-      status: 'Hadir',
-      session: '13:00 - 16:00',
-    },
-    {
-      id: 7,
-      no: 7,
-      nama: 'Gilang Ramadhan',
-      nim: '2211007',
-      kodeKelas: 'IF01A',
-      namaKelas: 'Mata Kuliah AI',
-      jamAbsen: '13:45',
-      tanggal: '2024-10-02',
-      status: 'Telat',
-      session: '13:00 - 16:00',
-    },
-    {
-      id: 8,
-      no: 8,
-      nama: 'Hana Safitri',
-      nim: '2211008',
-      kodeKelas: 'IF01B',
-      namaKelas: 'Mata Kuliah IOT',
-      jamAbsen: '14:00',
-      tanggal: '2024-10-02',
-      status: 'Hadir',
-      session: '14:00 - 17:00',
-    },
-  ];
+  courses: Course[] = [];
+  sessions: SessionWithAttendances[] = [];
+  selectedSession: SessionWithAttendances | null = null;
+  attendances: AttendanceDetail[] = [];
 
-  filteredRecords: AttendanceRecord[] = [];
-  availableClasses: string[] = ['IF01A', 'IF01B', 'IF01C'];
+  // Filter
+  selectedCourseId: number = 0;
+  dateFrom: string = '';
+  dateTo: string = '';
+  searchText: string = '';
 
-  // Statistics
-  get totalHadir(): number {
-    return this.filteredRecords.filter((r) => r.status === 'Hadir').length;
-  }
+  // Loading states
+  isLoadingCourses: boolean = false;
+  isLoadingSessions: boolean = false;
+  isLoadingAttendances: boolean = false;
 
-  get totalTelat(): number {
-    return this.filteredRecords.filter((r) => r.status === 'Telat').length;
-  }
+  // Modal
+  showDetailModal: boolean = false;
 
-  get totalTidakHadir(): number {
-    return this.filteredRecords.filter((r) => r.status === 'Tidak Hadir').length;
-  }
+  // Filtered attendances for search
+  filteredAttendances: AttendanceDetail[] = [];
 
-  constructor(private router: Router) {}
+  constructor(
+    private router: Router,
+    private courseService: CourseService,
+    private attendanceHistoryService: AttendanceHistoryService,
+    private authService: AuthService,
+    private toastService: ToastService,
+  ) {}
 
   ngOnInit(): void {
     this.setCurrentDate();
-    this.selectedDate = this.formatDateForInput();
-    this.filterRecords();
+
+    // Get current user
+    const user = this.authService.getCurrentUser();
+    if (user) {
+      this.currentUser = user.name;
+    }
+
+    // Set default date range (last 30 days)
+    const today = new Date();
+    this.dateTo = today.toISOString().split('T')[0];
+    const thirtyDaysAgo = new Date(today);
+    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+    this.dateFrom = thirtyDaysAgo.toISOString().split('T')[0];
+
+    this.loadCourses();
+    this.loadSessions();
+
+    // Update current date every minute
+    setInterval(() => {
+      this.setCurrentDate();
+    }, 60000);
   }
 
   setCurrentDate(): void {
@@ -186,129 +105,188 @@ export class AttendanceHistoryComponent implements OnInit {
     this.currentDate = `${dayName}, ${day} ${month} ${year} ${hours}:${minutes}`;
   }
 
-  formatDateForInput(): string {
-    const now = new Date();
-    const year = now.getFullYear();
-    const month = String(now.getMonth() + 1).padStart(2, '0');
-    const day = String(now.getDate()).padStart(2, '0');
-    return `${year}-${month}-${day}`;
+  loadCourses(): void {
+    this.isLoadingCourses = true;
+    this.courseService.getCourses().subscribe({
+      next: (response) => {
+        this.isLoadingCourses = false;
+        this.courses = response.data.courses;
+      },
+      error: (error) => {
+        this.isLoadingCourses = false;
+        this.toastService.error(error.message, 'Gagal Memuat Kelas');
+      },
+    });
   }
 
-  onDateChange(event: any): void {
-    this.selectedDate = event.target.value;
-    this.filterRecords();
+  loadSessions(): void {
+    this.isLoadingSessions = true;
+    const params: any = {};
+    if (this.selectedCourseId > 0) params.course_id = this.selectedCourseId;
+    if (this.dateFrom) params.date_from = this.dateFrom;
+    if (this.dateTo) params.date_to = this.dateTo;
+
+    console.log('Loading sessions with params:', params);
+
+    this.attendanceHistoryService.getSessionsWithAttendances(params).subscribe({
+      next: (response) => {
+        this.isLoadingSessions = false;
+        console.log('Sessions loaded:', response.data);
+        this.sessions = response.data.sessions;
+      },
+      error: (error) => {
+        this.isLoadingSessions = false;
+        console.error('Error loading sessions:', error);
+        if (error.status !== 404) {
+          this.toastService.error(error.message, 'Gagal Memuat Data');
+        }
+        this.sessions = [];
+      },
+    });
   }
 
-  filterRecords(): void {
-    let filtered = [...this.attendanceRecords];
-
-    // Filter by class
-    if (this.selectedKelas) {
-      filtered = filtered.filter((record) => record.kodeKelas === this.selectedKelas);
-    }
-
-    // Filter by date
-    if (this.selectedDate) {
-      filtered = filtered.filter((record) => record.tanggal === this.selectedDate);
-    }
-
-    // Filter by status
-    if (this.selectedStatus) {
-      filtered = filtered.filter((record) => record.status === this.selectedStatus);
-    }
-
-    // Filter by search text
-    if (this.searchText) {
-      const searchLower = this.searchText.toLowerCase();
-      filtered = filtered.filter(
-        (record) =>
-          record.nama.toLowerCase().includes(searchLower) ||
-          record.nim.toLowerCase().includes(searchLower) ||
-          record.kodeKelas.toLowerCase().includes(searchLower),
-      );
-    }
-
-    // Update numbering
-    this.filteredRecords = filtered.map((record, index) => ({
-      ...record,
-      no: index + 1,
-    }));
+  onFilterChange(): void {
+    this.loadSessions();
   }
 
-  resetFilters(): void {
-    this.selectedKelas = '';
-    this.selectedDate = this.formatDateForInput();
-    this.selectedStatus = '';
+  viewAttendances(session: SessionWithAttendances): void {
+    this.selectedSession = session;
+    this.isLoadingAttendances = true;
+    this.showDetailModal = true;
+
+    this.attendanceHistoryService.getAttendancesBySession(session.id).subscribe({
+      next: (response) => {
+        this.isLoadingAttendances = false;
+        this.attendances = response.data.attendances;
+        this.filteredAttendances = [...this.attendances];
+      },
+      error: (error) => {
+        this.isLoadingAttendances = false;
+        if (error.status !== 404) {
+          this.toastService.error(error.message, 'Gagal Memuat Kehadiran');
+        }
+        this.attendances = [];
+        this.filteredAttendances = [];
+      },
+    });
+  }
+
+  closeDetailModal(): void {
+    this.showDetailModal = false;
+    this.selectedSession = null;
+    this.attendances = [];
+    this.filteredAttendances = [];
     this.searchText = '';
-    this.filterRecords();
   }
 
-  downloadReport(): void {
-    if (this.filteredRecords.length === 0) {
-      alert('Tidak ada data untuk diunduh!');
+  filterAttendances(): void {
+    if (!this.searchText) {
+      this.filteredAttendances = [...this.attendances];
       return;
     }
 
-    // Create CSV content
-    const headers = [
-      'No',
-      'Nama',
-      'NIM',
-      'Kode Kelas',
-      'Nama Kelas',
-      'Tanggal',
-      'Jam Absen',
-      'Sesi',
-      'Status',
-    ];
-    const csvContent = [
-      headers.join(','),
-      ...this.filteredRecords.map((record) =>
-        [
-          record.no,
-          `"${record.nama}"`,
-          record.nim,
-          record.kodeKelas,
-          `"${record.namaKelas}"`,
-          record.tanggal,
-          record.jamAbsen,
-          `"${record.session}"`,
-          record.status,
-        ].join(','),
-      ),
-    ].join('\n');
+    const searchLower = this.searchText.toLowerCase();
+    this.filteredAttendances = this.attendances.filter(
+      (att) =>
+        att.student?.name?.toLowerCase().includes(searchLower) ||
+        att.student?.username?.toLowerCase().includes(searchLower),
+    );
+  }
 
-    // Create and download file
-    const blob = new Blob([csvContent], {
-      type: 'text/csv;charset=utf-8;',
+  formatDate(dateStr: string): string {
+    if (!dateStr) return '';
+    const date = new Date(dateStr);
+    const days = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'];
+    const months = [
+      'Januari',
+      'Februari',
+      'Maret',
+      'April',
+      'Mei',
+      'Juni',
+      'Juli',
+      'Agustus',
+      'September',
+      'Oktober',
+      'November',
+      'Desember',
+    ];
+    return `${days[date.getDay()]}, ${date.getDate()} ${months[date.getMonth()]} ${date.getFullYear()}`;
+  }
+
+  formatTime(time: string): string {
+    if (!time) return '';
+    const parts = time.split(':');
+    if (parts.length >= 2) {
+      let hours = parseInt(parts[0], 10);
+      const minutes = parts[1];
+      const ampm = hours >= 12 ? 'PM' : 'AM';
+      hours = hours % 12;
+      hours = hours ? hours : 12;
+      return `${hours.toString().padStart(2, '0')}:${minutes} ${ampm}`;
+    }
+    return time;
+  }
+
+  formatTimestamp(timestamp: string | null): string {
+    if (!timestamp) return '-';
+    const date = new Date(timestamp);
+    const hours = String(date.getHours()).padStart(2, '0');
+    const minutes = String(date.getMinutes()).padStart(2, '0');
+    return `${hours}:${minutes}`;
+  }
+
+  getStatusBadgeClass(status: string | null): string {
+    if (status === 'present') return 'bg-green-100 text-green-800';
+    if (status === 'late') return 'bg-yellow-100 text-yellow-800';
+    return 'bg-gray-100 text-gray-600';
+  }
+
+  getStatusText(status: string | null): string {
+    if (status === 'present') return 'Hadir';
+    if (status === 'late') return 'Terlambat';
+    return 'Belum Absen';
+  }
+
+  getAttendanceCount(session: SessionWithAttendances): number {
+    return session.attendances?.filter((a) => a.confirmed).length || 0;
+  }
+
+  downloadReport(): void {
+    if (!this.selectedSession) return;
+
+    // Create CSV content
+    let csv = 'No,Nama,Username,Status,Waktu Absen\n';
+    this.filteredAttendances.forEach((att, index) => {
+      csv += `${index + 1},${att.student?.name || '-'},${att.student?.username || '-'},${this.getStatusText(att.status)},${this.formatTimestamp(att.timestamp)}\n`;
     });
+
+    // Create blob and download
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
     const link = document.createElement('a');
     const url = URL.createObjectURL(blob);
-
-    const fileName = `Riwayat_Absen_${this.selectedDate || 'All'}_${
-      this.selectedKelas || 'All'
-    }.csv`;
-
     link.setAttribute('href', url);
-    link.setAttribute('download', fileName);
+    link.setAttribute(
+      'download',
+      `Absensi_${this.selectedSession.course?.code}_${this.selectedSession.date}.csv`,
+    );
     link.style.visibility = 'hidden';
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
 
-    alert('Laporan berhasil diunduh!');
+    this.toastService.success('Laporan berhasil diunduh!', 'Berhasil');
   }
 
-  getStatusClass(status: string): string {
-    switch (status) {
-      case 'Hadir':
-        return 'bg-green-100 text-green-800';
-      case 'Telat':
-        return 'bg-yellow-100 text-yellow-800';
-      case 'Tidak Hadir':
-        return 'bg-red-100 text-red-800';
-      default:
-        return 'bg-gray-100 text-gray-800';
-    }
+  getPresentCount(): number {
+    return this.filteredAttendances.filter((a) => a.status === 'present').length;
+  }
+
+  getLateCount(): number {
+    return this.filteredAttendances.filter((a) => a.status === 'late').length;
+  }
+
+  getAbsentCount(): number {
+    return this.filteredAttendances.filter((a) => !a.status).length;
   }
 }
