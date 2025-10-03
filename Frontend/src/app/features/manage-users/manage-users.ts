@@ -128,6 +128,10 @@ export class ManageUsersComponent implements OnInit {
       this.router.navigate(['/dashboard']);
     } else if (menu === 'kelola-kelas') {
       this.router.navigate(['/manage-classes']);
+    } else if (menu === 'generate-absen') {
+      this.router.navigate(['/generate-absen']);
+    } else if (menu === 'riwayat-absen') {
+      this.router.navigate(['/attendance-history']);
     } else if (menu === 'pengaturan') {
       this.router.navigate(['/settings']);
     }
