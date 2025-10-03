@@ -2,6 +2,7 @@ import { CommonModule } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
+import { MainLayoutComponent } from '../../shared/layouts/main-layout/main-layout.component';
 
 interface AttendanceRecord {
   no: number;
@@ -14,7 +15,7 @@ interface AttendanceRecord {
 @Component({
   selector: 'app-dashboard',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, MainLayoutComponent],
   templateUrl: './dashboard.html',
 })
 export class DashboardComponent implements OnInit {
@@ -117,21 +118,6 @@ export class DashboardComponent implements OnInit {
     this.currentDate = `${dayName}, ${day} ${month} ${year} ${hours}:${minutes}`;
   }
 
-  setActiveMenu(menu: string): void {
-    this.activeMenu = menu;
-    if (menu === 'kelola-user') {
-      this.router.navigate(['/manage-users']);
-    } else if (menu === 'kelola-kelas') {
-      this.router.navigate(['/manage-classes']);
-    } else if (menu === 'generate-absen') {
-      this.router.navigate(['/generate-absen']);
-    } else if (menu === 'riwayat-absen') {
-      this.router.navigate(['/attendance-history']);
-    } else if (menu === 'pengaturan') {
-      this.router.navigate(['/settings']);
-    }
-  }
-
   filterRecords(): void {
     this.filteredRecords = this.attendanceRecords.filter((record) => {
       const matchesSearch = record.nama.toLowerCase().includes(this.searchText.toLowerCase());
@@ -141,12 +127,6 @@ export class DashboardComponent implements OnInit {
 
   downloadReport(): void {
     alert('Fitur download akan ditambahkan nanti');
-  }
-
-  logout(): void {
-    if (confirm('Apakah Anda yakin ingin keluar?')) {
-      this.router.navigate(['/login']);
-    }
   }
 
   formatDateForInput(): string {

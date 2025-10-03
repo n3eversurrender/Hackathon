@@ -2,6 +2,7 @@ import { CommonModule } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
+import { MainLayoutComponent } from '../../shared/layouts/main-layout/main-layout.component';
 
 interface Class {
   id: number;
@@ -12,7 +13,7 @@ interface Class {
 @Component({
   selector: 'app-manage-classes',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, MainLayoutComponent],
   templateUrl: './manage-classes.html',
 })
 export class ManageClassesComponent implements OnInit {
@@ -91,21 +92,6 @@ export class ManageClassesComponent implements OnInit {
     this.currentDate = `${dayName}, ${day} ${month} ${year} ${hours}:${minutes}`;
   }
 
-  setActiveMenu(menu: string): void {
-    this.activeMenu = menu;
-    if (menu === 'beranda') {
-      this.router.navigate(['/dashboard']);
-    } else if (menu === 'kelola-user') {
-      this.router.navigate(['/manage-users']);
-    } else if (menu === 'generate-absen') {
-      this.router.navigate(['/generate-absen']);
-    } else if (menu === 'riwayat-absen') {
-      this.router.navigate(['/attendance-history']);
-    } else if (menu === 'pengaturan') {
-      this.router.navigate(['/settings']);
-    }
-  }
-
   filterClasses(): void {
     this.filteredClasses = this.classes.filter((cls) => {
       const searchLower = this.searchText.toLowerCase();
@@ -175,12 +161,6 @@ export class ManageClassesComponent implements OnInit {
       this.classes = this.classes.filter((c) => c.id !== cls.id);
       this.filteredClasses = [...this.classes];
       alert('Kelas berhasil dihapus!');
-    }
-  }
-
-  logout(): void {
-    if (confirm('Apakah Anda yakin ingin keluar?')) {
-      this.router.navigate(['/login']);
     }
   }
 }
