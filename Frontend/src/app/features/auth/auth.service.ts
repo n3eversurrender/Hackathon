@@ -14,7 +14,10 @@ export class AuthService {
   private currentUserSubject = new BehaviorSubject<User | null>(this.getUserFromStorage());
   public currentUser$ = this.currentUserSubject.asObservable();
 
-  constructor(private http: HttpClient, private router: Router) {}
+  constructor(
+    private http: HttpClient,
+    private router: Router,
+  ) {}
 
   register(data: RegisterRequest): Observable<AuthResponse> {
     return this.http
@@ -23,20 +26,18 @@ export class AuthService {
   }
 
   login(data: LoginRequest): Observable<AuthResponse> {
-    return this.http
-      .post<AuthResponse>(`${this.apiUrl}/api/v1/auth/login`, data)
-      .pipe(
-        map((response) => {
-          if (response.data && typeof response.data === 'object' && 'access_token' in response.data) {
-            // Store token and user data
-            localStorage.setItem('access_token', response.data.access_token);
-            localStorage.setItem('user', JSON.stringify(response.data.user));
-            this.currentUserSubject.next(response.data.user);
-          }
-          return response;
-        }),
-        catchError(this.handleError)
-      );
+    return this.http.post<AuthResponse>(`${this.apiUrl}/api/v1/auth/login`, data).pipe(
+      map((response) => {
+        if (response.data && typeof response.data === 'object' && 'access_token' in response.data) {
+          // Store token and user data
+          localStorage.setItem('access_token', response.data.access_token);
+          localStorage.setItem('user', JSON.stringify(response.data.user));
+          this.currentUserSubject.next(response.data.user);
+        }
+        return response;
+      }),
+      catchError(this.handleError),
+    );
   }
 
   logout(): void {

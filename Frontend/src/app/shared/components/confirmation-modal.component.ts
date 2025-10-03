@@ -20,12 +20,7 @@ import { Component, EventEmitter, Input, Output } from '@angular/core';
           <div class="flex items-center gap-4">
             <!-- Icon -->
             <div [class]="getIconClass()">
-              <svg
-                class="w-6 h-6 text-white"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
+              <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path
                   stroke-linecap="round"
                   stroke-linejoin="round"
@@ -146,4 +141,3 @@ export class ConfirmationModalComponent {
     }
   }
 }
-

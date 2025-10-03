@@ -62,7 +62,7 @@ export class SidebarComponent implements OnInit {
     // Clear all sessions and local storage
     localStorage.clear();
     sessionStorage.clear();
-    
+
     this.authService.logout();
     this.toastService.success('Anda telah keluar dari sistem.', 'Logout Berhasil!');
   }
