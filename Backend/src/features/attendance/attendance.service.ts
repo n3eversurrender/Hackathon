@@ -3,6 +3,7 @@ import { InjectModel } from '@nestjs/sequelize';
 import { Sequelize } from 'sequelize-typescript';
 import { QueryBuilderHelper } from 'src/cores/helpers/query-builder.helper';
 import { ResponseHelper } from 'src/cores/helpers/response.helper';
+import { Session } from 'src/features/sessions/entities/session.entity';
 import { CreateAttendanceDto } from './dto/create-attendance.dto';
 import { UpdateAttendanceDto } from './dto/update-attendance.dto';
 import { Attendance } from './entities/attendance.entity';
@@ -14,6 +15,8 @@ export class AttendanceService {
     private readonly sequelize: Sequelize,
     @InjectModel(Attendance)
     private readonly attendanceModel: typeof Attendance,
+    @InjectModel(Session)
+    private readonly sessionModel: typeof Session,
   ) {}
 
   async findAll(query: any) {
@@ -21,7 +24,28 @@ export class AttendanceService {
       const { count, data } = await new QueryBuilderHelper(
         this.attendanceModel,
         query,
-      ).getResult();
+      )
+        .options({
+          include: [
+            {
+              association: 'student',
+              required: false,
+              attributes: ['id', 'name', 'username', 'email'],
+            },
+            {
+              association: 'session',
+              required: false,
+              include: [
+                {
+                  association: 'course',
+                  required: false,
+                  attributes: ['id', 'name', 'code'],
+                },
+              ],
+            },
+          ],
+        })
+        .getResult();
 
       const result = {
         count: count,
@@ -53,6 +77,41 @@ export class AttendanceService {
   async create(body: CreateAttendanceDto) {
     const transaction = await this.sequelize.transaction();
     try {
+      // Get session to validate QR code is still active
+      const session = await this.sessionModel.findByPk(body.session_id);
+      if (!session) {
+        throw new Error('Session tidak ditemukan');
+      }
+
+      // Get current date and time in Jakarta timezone (WIB/WITA/WIT)
+      const now = new Date();
+      const currentDate = now.toISOString().split('T')[0]; // YYYY-MM-DD
+      const currentTime = now.toTimeString().split(' ')[0]; // HH:MM:SS
+
+      // Validate date - QR code only valid on session date
+      if (session.date !== currentDate) {
+        throw new Error(
+          'QR Code hanya berlaku pada tanggal ' +
+            new Date(session.date).toLocaleDateString('id-ID', {
+              weekday: 'long',
+              year: 'numeric',
+              month: 'long',
+              day: 'numeric',
+            }),
+        );
+      }
+
+      // Validate time - QR code only valid between start_time and end_time
+      if (
+        currentTime < session.start_time ||
+        currentTime > session.end_time
+      ) {
+        throw new Error(
+          `QR Code hanya berlaku pada pukul ${session.start_time.substring(0, 5)} - ${session.end_time.substring(0, 5)}`,
+        );
+      }
+
+      // Create attendance
       const attendance = await this.attendanceModel.create(
         { ...body },
         { transaction },
