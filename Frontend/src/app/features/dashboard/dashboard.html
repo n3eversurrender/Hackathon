@@ -1,77 +1,34 @@
 <app-main-layout [activeMenu]="activeMenu" [currentDate]="currentDate" [currentUser]="currentUser">
-  <!-- Statistics Cards -->
-  <div class="grid grid-cols-3 gap-6 mb-8">
-    <!-- Total Kehadiran -->
-    <div class="bg-white rounded-2xl shadow-md p-6 border-2 border-[#7D2E2E]">
-      <h3 class="text-[#7D2E2E] font-bold text-center mb-4">Total Kehadiran Hari Ini</h3>
-      <p class="text-[#7D2E2E] text-6xl font-bold text-center">{{ totalKehadiran }}</p>
-    </div>
-
-    <!-- Telat Absen -->
-    <div class="bg-white rounded-2xl shadow-md p-6 border-2 border-[#7D2E2E]">
-      <h3 class="text-[#7D2E2E] font-bold text-center mb-4">Telat Absen Hari ini</h3>
-      <p class="text-[#7D2E2E] text-6xl font-bold text-center">{{ telatAbsen }}</p>
-    </div>
-
-    <!-- Tidak Ada Absen -->
-    <div class="bg-white rounded-2xl shadow-md p-6 border-2 border-[#7D2E2E]">
-      <h3 class="text-[#7D2E2E] font-bold text-center mb-4">Tidak Ada Absen</h3>
-      <p class="text-[#7D2E2E] text-6xl font-bold text-center">{{ tidakAdaAbsen }}</p>
-    </div>
-  </div>
-
-  <!-- Riwayat Absen Section -->
-  <div class="bg-white rounded-2xl shadow-md p-6 border-2 border-[#7D2E2E]">
-    <div class="flex items-center gap-3 mb-6">
-      <svg class="w-6 h-6 text-[#7D2E2E]" fill="currentColor" viewBox="0 0 20 20">
+  <!-- Date Filter -->
+  <div class="mb-6 flex justify-end">
+    <div class="relative">
+      <input
+        type="date"
+        [value]="selectedDate"
+        (change)="onDateChange($event)"
+        class="appearance-none bg-white border-2 border-[#7D2E2E] rounded-lg px-4 py-2 pr-10 text-gray-700 focus:outline-none focus:ring-2 focus:ring-[#7D2E2E]"
+      />
+      <svg
+        class="w-5 h-5 text-[#7D2E2E] absolute right-3 top-1/2 transform -translate-y-1/2 pointer-events-none"
+        fill="currentColor"
+        viewBox="0 0 20 20"
+      >
         <path
           fill-rule="evenodd"
-          d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z"
+          d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z"
           clip-rule="evenodd"
         />
       </svg>
-      <h3 class="text-[#7D2E2E] font-bold text-xl">Riwayat Absen</h3>
     </div>
+  </div>
 
-    <!-- Filters -->
-    <div class="flex gap-4 mb-6">
-      <!-- Pilih Kelas Dropdown -->
-      <div class="relative">
-        <select
-          [(ngModel)]="selectedKelas"
-          class="appearance-none bg-white border-2 border-[#7D2E2E] rounded-lg px-4 py-2 pr-10 text-gray-700 focus:outline-none focus:ring-2 focus:ring-[#7D2E2E] min-w-[200px]"
-        >
-          <option value="">Pilih Kelas</option>
-          <option value="IF01A">IF01A</option>
-          <option value="IF01B">IF01B</option>
-          <option value="IF02A">IF02A</option>
-        </select>
-        <svg
-          class="w-5 h-5 text-[#7D2E2E] absolute right-3 top-1/2 transform -translate-y-1/2 pointer-events-none"
-          fill="currentColor"
-          viewBox="0 0 20 20"
-        >
-          <path
-            fill-rule="evenodd"
-            d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"
-            clip-rule="evenodd"
-          />
-        </svg>
-      </div>
-
-      <!-- Date Picker -->
-      <div class="relative">
-        <input
-          type="date"
-          [value]="formatDateForInput()"
-          (change)="onDateChange($event)"
-          class="appearance-none bg-white border-2 border-[#7D2E2E] rounded-lg px-4 py-2 pr-10 text-gray-700 focus:outline-none focus:ring-2 focus:ring-[#7D2E2E]"
-        />
-        <svg
-          class="w-5 h-5 text-[#7D2E2E] absolute right-3 top-1/2 transform -translate-y-1/2 pointer-events-none"
-          fill="currentColor"
-          viewBox="0 0 20 20"
-        >
+  <!-- Statistics Cards -->
+  <div class="grid grid-cols-3 gap-6 mb-8">
+    <!-- Total Sesi -->
+    <div class="bg-white rounded-2xl shadow-md p-6 border-2 border-[#7D2E2E]">
+      <div class="flex items-center justify-between mb-4">
+        <h3 class="text-[#7D2E2E] font-bold">Total Sesi Hari Ini</h3>
+        <svg class="w-8 h-8 text-[#7D2E2E]" fill="currentColor" viewBox="0 0 20 20">
           <path
             fill-rule="evenodd"
             d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z"
@@ -79,70 +36,315 @@
           />
         </svg>
       </div>
+      @if (isLoadingStats) {
+        <div class="flex justify-center py-4">
+          <svg
+            class="animate-spin h-8 w-8 text-[#7D2E2E]"
+            xmlns="http://www.w3.org/2000/svg"
+            fill="none"
+            viewBox="0 0 24 24"
+          >
+            <circle
+              class="opacity-25"
+              cx="12"
+              cy="12"
+              r="10"
+              stroke="currentColor"
+              stroke-width="4"
+            ></circle>
+            <path
+              class="opacity-75"
+              fill="currentColor"
+              d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+            ></path>
+          </svg>
+        </div>
+      } @else {
+        <p class="text-[#7D2E2E] text-6xl font-bold text-center">
+          {{ statistics.totalSessions }}
+        </p>
+      }
+    </div>
 
-      <!-- Search Box -->
-      <div class="flex-1 relative">
-        <input
-          type="text"
-          [(ngModel)]="searchText"
-          (ngModelChange)="filterRecords()"
-          placeholder="Cari Siswa"
-          class="w-full bg-white border-2 border-[#7D2E2E] rounded-lg px-4 py-2 pl-10 text-gray-700 focus:outline-none focus:ring-2 focus:ring-[#7D2E2E]"
-        />
-        <svg
-          class="w-5 h-5 text-[#7D2E2E] absolute left-3 top-1/2 transform -translate-y-1/2"
-          fill="currentColor"
-          viewBox="0 0 20 20"
-        >
+    <!-- Mahasiswa Hadir -->
+    <div class="bg-white rounded-2xl shadow-md p-6 border-2 border-[#7D2E2E]">
+      <div class="flex items-center justify-between mb-4">
+        <h3 class="text-[#7D2E2E] font-bold">Mahasiswa Hadir</h3>
+        <svg class="w-8 h-8 text-[#7D2E2E]" fill="currentColor" viewBox="0 0 20 20">
           <path
-            fill-rule="evenodd"
-            d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z"
-            clip-rule="evenodd"
+            d="M9 6a3 3 0 11-6 0 3 3 0 016 0zM17 6a3 3 0 11-6 0 3 3 0 016 0zM12.93 17c.046-.327.07-.66.07-1a6.97 6.97 0 00-1.5-4.33A5 5 0 0119 16v1h-6.07zM6 11a5 5 0 015 5v1H1v-1a5 5 0 015-5z"
           />
         </svg>
       </div>
+      @if (isLoadingStats) {
+        <div class="flex justify-center py-4">
+          <svg
+            class="animate-spin h-8 w-8 text-[#7D2E2E]"
+            xmlns="http://www.w3.org/2000/svg"
+            fill="none"
+            viewBox="0 0 24 24"
+          >
+            <circle
+              class="opacity-25"
+              cx="12"
+              cy="12"
+              r="10"
+              stroke="currentColor"
+              stroke-width="4"
+            ></circle>
+            <path
+              class="opacity-75"
+              fill="currentColor"
+              d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+            ></path>
+          </svg>
+        </div>
+      } @else {
+        <p class="text-[#7D2E2E] text-6xl font-bold text-center">
+          {{ statistics.totalAttendances }}
+        </p>
+      }
+    </div>
 
-      <!-- Download Button -->
-      <button
-        (click)="downloadReport()"
-        class="bg-[#7D2E2E] text-white px-6 py-2 rounded-lg hover:bg-[#6D1E1E] transition-colors flex items-center gap-2"
-      >
-        <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+    <!-- Rata-rata Kehadiran -->
+    <div class="bg-white rounded-2xl shadow-md p-6 border-2 border-[#7D2E2E]">
+      <div class="flex items-center justify-between mb-4">
+        <h3 class="text-[#7D2E2E] font-bold">Rata-rata Kehadiran</h3>
+        <svg class="w-8 h-8 text-[#7D2E2E]" fill="currentColor" viewBox="0 0 20 20">
+          <path
+            d="M2 11a1 1 0 011-1h2a1 1 0 011 1v5a1 1 0 01-1 1H3a1 1 0 01-1-1v-5zM8 7a1 1 0 011-1h2a1 1 0 011 1v9a1 1 0 01-1 1H9a1 1 0 01-1-1V7zM14 4a1 1 0 011-1h2a1 1 0 011 1v12a1 1 0 01-1 1h-2a1 1 0 01-1-1V4z"
+          />
+        </svg>
+      </div>
+      @if (isLoadingStats) {
+        <div class="flex justify-center py-4">
+          <svg
+            class="animate-spin h-8 w-8 text-[#7D2E2E]"
+            xmlns="http://www.w3.org/2000/svg"
+            fill="none"
+            viewBox="0 0 24 24"
+          >
+            <circle
+              class="opacity-25"
+              cx="12"
+              cy="12"
+              r="10"
+              stroke="currentColor"
+              stroke-width="4"
+            ></circle>
+            <path
+              class="opacity-75"
+              fill="currentColor"
+              d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+            ></path>
+          </svg>
+        </div>
+      } @else {
+        <p class="text-[#7D2E2E] text-6xl font-bold text-center">
+          {{ statistics.averageAttendance }}%
+        </p>
+      }
+    </div>
+  </div>
+
+  <!-- Active Sessions Alert -->
+  @if (activeSessions.length > 0) {
+    <div class="bg-green-50 border-2 border-green-500 rounded-2xl p-6 mb-8">
+      <div class="flex items-center gap-3 mb-4">
+        <svg class="w-6 h-6 text-green-600" fill="currentColor" viewBox="0 0 20 20">
           <path
             fill-rule="evenodd"
-            d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L9 10.586V3a1 1 0 112 0v7.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z"
+            d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
             clip-rule="evenodd"
           />
         </svg>
-      </button>
+        <h3 class="text-green-800 font-bold text-lg">Sesi Aktif Sekarang</h3>
+      </div>
+      @for (session of activeSessions; track session.id) {
+        <div class="bg-white rounded-lg p-4 mb-2 border border-green-200">
+          <div class="flex justify-between items-center">
+            <div>
+              <p class="font-bold text-green-800">{{ session.course?.name || '-' }}</p>
+              <p class="text-sm text-gray-600">
+                {{ session.course?.code || '-' }} • QR Aktif: {{ formatTime(session.start_time) }} -
+                {{ formatTime(session.end_time) }}
+              </p>
+            </div>
+            <div class="text-right">
+              <p class="text-2xl font-bold text-green-600">{{ session.attendanceCount }}</p>
+              <p class="text-xs text-gray-600">Mahasiswa Hadir</p>
+            </div>
+          </div>
+        </div>
+      }
+    </div>
+  }
+
+  <!-- Daftar Sesi Hari Ini -->
+  <div class="bg-white rounded-2xl shadow-md p-6 border-2 border-[#7D2E2E] mb-8">
+    <div class="flex items-center gap-3 mb-6">
+      <svg class="w-6 h-6 text-[#7D2E2E]" fill="currentColor" viewBox="0 0 20 20">
+        <path
+          fill-rule="evenodd"
+          d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z"
+          clip-rule="evenodd"
+        />
+      </svg>
+      <h3 class="text-[#7D2E2E] font-bold text-xl">Daftar Sesi Hari Ini</h3>
     </div>
 
-    <!-- Table -->
     <div class="overflow-x-auto rounded-lg">
       <table class="w-full">
         <thead>
           <tr class="bg-[#7D2E2E] text-white">
             <th class="px-6 py-3 text-left font-bold">No</th>
-            <th class="px-6 py-3 text-left font-bold">Nama</th>
-            <th class="px-6 py-3 text-left font-bold">Jam Absen</th>
-            <th class="px-6 py-3 text-left font-bold">Kode Kelas</th>
-            <th class="px-6 py-3 text-left font-bold">Status</th>
+            <th class="px-6 py-3 text-left font-bold">Kelas</th>
+            <th class="px-6 py-3 text-left font-bold">Waktu QR Aktif</th>
+            <th class="px-6 py-3 text-center font-bold">Status</th>
+            <th class="px-6 py-3 text-center font-bold">Hadir</th>
+            <th class="px-6 py-3 text-center font-bold">Aksi</th>
           </tr>
         </thead>
         <tbody>
-          <tr
-            *ngFor="let record of filteredRecords; let i = index"
-            [class.bg-gray-50]="i % 2 === 0"
-            class="border-b border-gray-200 hover:bg-gray-100 transition-colors"
-          >
-            <td class="px-6 py-4 text-[#7D2E2E]">{{ record.no }}</td>
-            <td class="px-6 py-4 text-[#7D2E2E] font-medium">{{ record.nama }}</td>
-            <td class="px-6 py-4 text-[#7D2E2E]">{{ record.jamAbsen }}</td>
-            <td class="px-6 py-4 text-[#7D2E2E] font-semibold">{{ record.kodeKelas }}</td>
-            <td class="px-6 py-4 text-[#7D2E2E] font-semibold">{{ record.status }}</td>
-          </tr>
+          @if (isLoadingSessions) {
+            <tr>
+              <td colspan="6" class="px-6 py-12 text-center">
+                <div class="flex flex-col items-center gap-3">
+                  <svg
+                    class="animate-spin h-10 w-10 text-[#7D2E2E]"
+                    xmlns="http://www.w3.org/2000/svg"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                  >
+                    <circle
+                      class="opacity-25"
+                      cx="12"
+                      cy="12"
+                      r="10"
+                      stroke="currentColor"
+                      stroke-width="4"
+                    ></circle>
+                    <path
+                      class="opacity-75"
+                      fill="currentColor"
+                      d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                    ></path>
+                  </svg>
+                  <p class="text-[#7D2E2E] font-medium">Memuat data...</p>
+                </div>
+              </td>
+            </tr>
+          } @else if (sessions.length === 0) {
+            <tr>
+              <td colspan="6" class="px-6 py-12 text-center text-gray-500">
+                <div class="flex flex-col items-center gap-3">
+                  <svg class="w-16 h-16 text-gray-300" fill="currentColor" viewBox="0 0 20 20">
+                    <path
+                      fill-rule="evenodd"
+                      d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z"
+                      clip-rule="evenodd"
+                    />
+                  </svg>
+                  <p class="font-medium">Tidak ada sesi pada tanggal ini</p>
+                </div>
+              </td>
+            </tr>
+          } @else {
+            @for (session of sessions; track session.id; let i = $index) {
+              <tr
+                [class.bg-gray-50]="i % 2 === 0"
+                class="border-b border-gray-200 hover:bg-gray-100 transition-colors"
+              >
+                <td class="px-6 py-4 text-[#7D2E2E]">{{ i + 1 }}</td>
+                <td class="px-6 py-4">
+                  <div class="text-[#7D2E2E] font-medium">
+                    {{ session.course?.name || '-' }}
+                  </div>
+                  <div class="text-sm text-gray-600">{{ session.course?.code || '-' }}</div>
+                </td>
+                <td class="px-6 py-4 text-[#7D2E2E]">
+                  {{ formatTime(session.start_time) }} - {{ formatTime(session.end_time) }}
+                </td>
+                <td class="px-6 py-4 text-center">
+                  @if (session.isActive) {
+                    <span
+                      class="inline-flex items-center gap-1 px-3 py-1 bg-green-100 text-green-800 rounded-full text-sm font-semibold"
+                    >
+                      <span class="w-2 h-2 bg-green-500 rounded-full animate-pulse"></span>
+                      Aktif
+                    </span>
+                  } @else {
+                    <span
+                      class="inline-flex items-center px-3 py-1 bg-gray-100 text-gray-600 rounded-full text-sm font-semibold"
+                    >
+                      Tidak Aktif
+                    </span>
+                  }
+                </td>
+                <td class="px-6 py-4 text-center">
+                  <span class="text-[#7D2E2E] font-bold text-lg">{{
+                    session.attendanceCount
+                  }}</span>
+                </td>
+                <td class="px-6 py-4 text-center">
+                  <button
+                    (click)="viewSessionDetail(session)"
+                    class="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition-colors text-sm font-semibold"
+                  >
+                    Lihat Detail
+                  </button>
+                </td>
+              </tr>
+            }
+          }
         </tbody>
       </table>
     </div>
   </div>
+
+  <!-- Recent Attendances -->
+  @if (recentAttendances.length > 0) {
+    <div class="bg-white rounded-2xl shadow-md p-6 border-2 border-[#7D2E2E]">
+      <div class="flex items-center gap-3 mb-6">
+        <svg class="w-6 h-6 text-[#7D2E2E]" fill="currentColor" viewBox="0 0 20 20">
+          <path
+            fill-rule="evenodd"
+            d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z"
+            clip-rule="evenodd"
+          />
+        </svg>
+        <h3 class="text-[#7D2E2E] font-bold text-xl">Aktivitas Absensi Terbaru</h3>
+      </div>
+
+      <div class="space-y-3">
+        @for (attendance of recentAttendances; track attendance.id) {
+          <div class="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+            <div class="flex items-center gap-4">
+              <div class="w-12 h-12 bg-[#7D2E2E] rounded-full flex items-center justify-center">
+                <span class="text-white font-bold text-lg">{{
+                  attendance.student?.name?.charAt(0) || 'M'
+                }}</span>
+              </div>
+              <div>
+                <p class="text-[#7D2E2E] font-semibold">
+                  {{ attendance.student?.name || 'Unknown' }}
+                </p>
+                <p class="text-sm text-gray-600">
+                  {{ attendance.session?.course?.name || '-' }} ({{
+                    attendance.session?.course?.code || '-'
+                  }})
+                </p>
+              </div>
+            </div>
+            <div class="text-right">
+              <p class="text-[#7D2E2E] font-medium">
+                {{ formatTimestamp(attendance.timestamp) }}
+              </p>
+              <p class="text-sm text-gray-600">{{ formatDate(attendance.session?.date || '') }}</p>
+            </div>
+          </div>
+        }
+      </div>
+    </div>
+  }
 </app-main-layout>
