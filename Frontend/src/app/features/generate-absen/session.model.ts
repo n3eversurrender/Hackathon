@@ -41,4 +41,3 @@ export interface SessionListResponse {
   count: number;
   sessions: Session[];
 }
-

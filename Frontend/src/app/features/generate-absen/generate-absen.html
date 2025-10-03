@@ -114,7 +114,7 @@
                       </svg>
                     </button>
                     <button
-                      (click)="deleteSession(session)"
+                      (click)="openDeleteModal(session)"
                       class="bg-red-600 text-white px-3 py-1 rounded hover:bg-red-700 transition-colors"
                       title="Hapus"
                     >
@@ -227,6 +227,33 @@
         />
       </div>
 
+      <div class="grid grid-cols-2 gap-4">
+        <div>
+          <label for="startTime" class="block text-[#7D2E2E] font-semibold mb-2"
+            >QR Aktif Dari</label
+          >
+          <input
+            id="startTime"
+            type="time"
+            [(ngModel)]="formData.start_time"
+            class="w-full border-2 border-[#7D2E2E] rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-[#7D2E2E] text-[#7D2E2E]"
+            aria-label="Waktu Mulai QR Code Aktif"
+          />
+        </div>
+        <div>
+          <label for="endTime" class="block text-[#7D2E2E] font-semibold mb-2"
+            >QR Aktif Sampai</label
+          >
+          <input
+            id="endTime"
+            type="time"
+            [(ngModel)]="formData.end_time"
+            class="w-full border-2 border-[#7D2E2E] rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-[#7D2E2E] text-[#7D2E2E]"
+            aria-label="Waktu Selesai QR Code Aktif"
+          />
+        </div>
+      </div>
+
       <div class="flex justify-end gap-3">
         <button
           (click)="closeModal()"
@@ -333,11 +360,7 @@
       <div class="flex justify-center mb-6">
         <div class="bg-gray-50 border-2 border-[#7D2E2E] rounded-lg p-6">
           @if (viewData.qr_code) {
-            <img
-              [src]="viewData.qr_code"
-              alt="QR Code"
-              class="w-80 h-80 object-contain"
-            />
+            <img [src]="viewData.qr_code" alt="QR Code" class="w-80 h-80 object-contain" />
           } @else {
             <div class="w-80 h-80 flex items-center justify-center text-gray-400">
               <p>QR Code tidak tersedia</p>
@@ -383,3 +406,21 @@
     </div>
   </div>
 </div>
+
+<!-- Confirmation Modal for Delete -->
+<app-confirmation-modal
+  *ngIf="showDeleteModal"
+  [isOpen]="showDeleteModal"
+  title="Konfirmasi Hapus"
+  [message]="
+    'Apakah Anda yakin ingin menghapus sesi ' +
+    (sessionToDelete?.course?.name || 'ini') +
+    ' pada tanggal ' +
+    formatDate(sessionToDelete?.date || '') +
+    '?'
+  "
+  confirmText="OK"
+  cancelText="Cancel"
+  (confirm)="confirmDeleteSession()"
+  (cancel)="cancelDeleteSession()"
+></app-confirmation-modal>

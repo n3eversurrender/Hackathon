@@ -2,20 +2,21 @@ import { CommonModule } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
+import { ConfirmationModalComponent } from '../../shared/components/confirmation-modal.component';
 import { MainLayoutComponent } from '../../shared/layouts/main-layout/main-layout.component';
 import { ToastService } from '../../shared/toast.service';
 import { AuthService } from '../auth/auth.service';
-import { CourseService } from '../manage-classes/course.service';
-import { Course } from '../manage-classes/course.model';
-import { CourseScheduleService } from '../manage-classes/course-schedule.service';
 import { CourseSchedule, DAY_NAMES } from '../manage-classes/course-schedule.model';
+import { CourseScheduleService } from '../manage-classes/course-schedule.service';
+import { Course } from '../manage-classes/course.model';
+import { CourseService } from '../manage-classes/course.service';
 import { Session } from './session.model';
 import { SessionService } from './session.service';
 
 @Component({
   selector: 'app-generate-absen',
   standalone: true,
-  imports: [CommonModule, FormsModule, MainLayoutComponent],
+  imports: [CommonModule, FormsModule, MainLayoutComponent, ConfirmationModalComponent],
   templateUrl: './generate-absen.html',
 })
 export class GenerateAbsenComponent implements OnInit {
@@ -26,6 +27,7 @@ export class GenerateAbsenComponent implements OnInit {
   // Modal states
   showModal: boolean = false;
   showViewModal: boolean = false;
+  showDeleteModal: boolean = false;
   isEditMode: boolean = false;
   modalTitle: string = 'Generate Sesi Absen';
 
@@ -34,17 +36,24 @@ export class GenerateAbsenComponent implements OnInit {
   isSaving: boolean = false;
   isLoadingSchedules: boolean = false;
 
+  // Delete session
+  sessionToDelete: Session | null = null;
+
   // Form data
   formData: {
     id: number;
     course_id: number;
     schedule_id: number;
     date: string;
+    start_time: string;
+    end_time: string;
   } = {
     id: 0,
     course_id: 0,
     schedule_id: 0,
     date: '',
+    start_time: '',
+    end_time: '',
   };
 
   // View data
@@ -144,13 +153,16 @@ export class GenerateAbsenComponent implements OnInit {
       this.courseScheduleService.getSchedulesByCourse(this.formData.course_id).subscribe({
         next: (response) => {
           this.isLoadingSchedules = false;
-          this.schedules = response.data.schedules;
+          this.schedules = response.data.schedules || [];
           this.formData.schedule_id = 0; // Reset schedule selection
         },
         error: (error) => {
           this.isLoadingSchedules = false;
-          this.toastService.error(error.message, 'Gagal Memuat Jadwal');
           this.schedules = [];
+          // Only show error toast if it's not a 404 (which means no schedules yet - that's okay)
+          if (error.status !== 404) {
+            this.toastService.error(error.message, 'Gagal Memuat Jadwal');
+          }
         },
       });
     } else {
@@ -168,6 +180,8 @@ export class GenerateAbsenComponent implements OnInit {
       course_id: 0,
       schedule_id: 0,
       date: today,
+      start_time: '',
+      end_time: '',
     };
     this.schedules = [];
     this.showModal = true;
@@ -180,20 +194,21 @@ export class GenerateAbsenComponent implements OnInit {
       course_id: 0,
       schedule_id: 0,
       date: '',
+      start_time: '',
+      end_time: '',
     };
     this.schedules = [];
   }
 
   saveSession(): void {
-    if (!this.formData.course_id || !this.formData.schedule_id || !this.formData.date) {
+    if (
+      !this.formData.course_id ||
+      !this.formData.schedule_id ||
+      !this.formData.date ||
+      !this.formData.start_time ||
+      !this.formData.end_time
+    ) {
       this.toastService.warning('Harap isi semua field!', 'Perhatian');
-      return;
-    }
-
-    // Get selected schedule to extract times
-    const selectedSchedule = this.schedules.find((s) => s.id === this.formData.schedule_id);
-    if (!selectedSchedule) {
-      this.toastService.error('Jadwal tidak ditemukan!', 'Error');
       return;
     }
 
@@ -203,12 +218,12 @@ export class GenerateAbsenComponent implements OnInit {
       course_id: this.formData.course_id,
       schedule_id: this.formData.schedule_id,
       date: this.formData.date,
-      start_time: selectedSchedule.start_time,
-      end_time: selectedSchedule.end_time,
+      start_time: this.formData.start_time,
+      end_time: this.formData.end_time,
     };
 
     this.sessionService.createSession(sessionData).subscribe({
-      next: (_response) => {
+      next: () => {
         this.isSaving = false;
         this.toastService.success('Sesi berhasil di-generate dengan QR Code!', 'Berhasil');
         this.loadSessions();
@@ -231,22 +246,29 @@ export class GenerateAbsenComponent implements OnInit {
     this.viewData = null;
   }
 
-  deleteSession(session: Session): void {
-    if (
-      confirm(
-        `Apakah Anda yakin ingin menghapus sesi ${session.course?.name || 'ini'}?`,
-      )
-    ) {
-      this.sessionService.deleteSession(session.id).subscribe({
-        next: (_response) => {
-          this.toastService.success('Sesi berhasil dihapus!', 'Berhasil');
-          this.loadSessions();
-        },
-        error: (error) => {
-          this.toastService.error(error.message, 'Gagal Menghapus');
-        },
-      });
-    }
+  openDeleteModal(session: Session): void {
+    this.sessionToDelete = session;
+    this.showDeleteModal = true;
+  }
+
+  confirmDeleteSession(): void {
+    if (!this.sessionToDelete) return;
+
+    this.sessionService.deleteSession(this.sessionToDelete.id).subscribe({
+      next: () => {
+        this.toastService.success('Sesi berhasil dihapus!', 'Berhasil');
+        this.loadSessions();
+        this.cancelDeleteSession();
+      },
+      error: (error) => {
+        this.toastService.error(error.message, 'Gagal Menghapus');
+      },
+    });
+  }
+
+  cancelDeleteSession(): void {
+    this.showDeleteModal = false;
+    this.sessionToDelete = null;
   }
 
   formatTime(time: string): string {
