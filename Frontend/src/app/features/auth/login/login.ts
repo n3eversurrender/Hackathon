@@ -31,7 +31,7 @@ export class LoginComponent {
   constructor(
     private router: Router,
     private authService: AuthService,
-    private toastService: ToastService
+    private toastService: ToastService,
   ) {}
 
   togglePassword(): void {
@@ -54,34 +54,34 @@ export class LoginComponent {
       .subscribe({
         next: (response) => {
           this.isLoading = false;
-          
+
           if (response.data && typeof response.data === 'object' && 'user' in response.data) {
             const user = response.data.user;
-            
+
             // Check if user has access (only admin and lecturer)
             if (user.role === 0 || user.role === 2) {
               // role 0 = admin, role 2 = lecturer
-              this.toastService.success(
-                `Selamat datang, ${user.name}!`,
-                'Login Berhasil!'
-              );
-              this.router.navigate(['/dashboard']);
+              this.toastService.success(`Selamat datang, ${user.name}!`, 'Login Berhasil!');
+
+              // Redirect admin users to manage-users page, others to dashboard
+              if (user.role === 0) {
+                this.router.navigate(['/manage-users']);
+              } else {
+                this.router.navigate(['/dashboard']);
+              }
             } else {
               // Student tidak boleh login
               this.authService.logout();
               this.toastService.error(
                 'Hanya Admin dan Dosen yang dapat mengakses sistem ini.',
-                'Akses Ditolak!'
+                'Akses Ditolak!',
               );
             }
           }
         },
         error: (error) => {
           this.isLoading = false;
-          this.toastService.error(
-            error.message || 'Username atau password salah!',
-            'Login Gagal!'
-          );
+          this.toastService.error(error.message || 'Username atau password salah!', 'Login Gagal!');
         },
       });
   }
