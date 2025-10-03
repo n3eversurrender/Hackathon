@@ -53,3 +53,7 @@ export interface ApiResponse<T> {
   data: T;
 }
 
+export interface CoursesListResponse {
+  count: number;
+  courses: Course[];
+}

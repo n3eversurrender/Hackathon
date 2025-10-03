@@ -2,12 +2,12 @@ import { CommonModule } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
-import { AuthService } from '../auth/auth.service';
+import { ConfirmationModalComponent } from '../../shared/components/confirmation-modal.component';
 import { MainLayoutComponent } from '../../shared/layouts/main-layout/main-layout.component';
 import { ToastService } from '../../shared/toast.service';
-import { ConfirmationModalComponent } from '../../shared/components/confirmation-modal.component';
-import { CourseService } from './course.service';
+import { AuthService } from '../auth/auth.service';
 import { Course } from './course.model';
+import { CourseService } from './course.service';
 
 @Component({
   selector: 'app-manage-classes',
@@ -59,7 +59,7 @@ export class ManageClassesComponent implements OnInit {
   ngOnInit(): void {
     this.setCurrentDate();
     this.loadClasses();
-    
+
     // Get current user
     const user = this.authService.getCurrentUser();
     if (user) {
@@ -100,7 +100,8 @@ export class ManageClassesComponent implements OnInit {
     this.courseService.getCourses().subscribe({
       next: (response) => {
         this.isLoading = false;
-        this.classes = response.data;
+        // Backend returns data with structure: { count: number, courses: Course[] }
+        this.classes = response.data.courses;
         this.filteredClasses = [...this.classes];
         this.toastService.success(`${this.classes.length} kelas berhasil dimuat`, 'Data Dimuat');
       },

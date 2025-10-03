@@ -8,6 +8,7 @@ import {
   ApiResponse,
   Course,
   CourseSchedule,
+  CoursesListResponse,
   CreateCourseDto,
   CreateCourseScheduleDto,
   UpdateCourseDto,
@@ -34,9 +35,9 @@ export class CourseService {
   }
 
   // Course APIs
-  getCourses(): Observable<ApiResponse<Course[]>> {
+  getCourses(): Observable<ApiResponse<CoursesListResponse>> {
     return this.http
-      .get<ApiResponse<Course[]>>(`${this.apiUrl}/api/v1/courses`, {
+      .get<ApiResponse<CoursesListResponse>>(`${this.apiUrl}/api/v1/courses`, {
         headers: this.getHeaders(),
       })
       .pipe(catchError(this.handleError));
@@ -77,12 +78,9 @@ export class CourseService {
   // Course Schedule APIs
   getCourseSchedules(courseId: number): Observable<ApiResponse<CourseSchedule[]>> {
     return this.http
-      .get<ApiResponse<CourseSchedule[]>>(
-        `${this.apiUrl}/api/v1/courses/${courseId}/schedules`,
-        {
-          headers: this.getHeaders(),
-        },
-      )
+      .get<ApiResponse<CourseSchedule[]>>(`${this.apiUrl}/api/v1/courses/${courseId}/schedules`, {
+        headers: this.getHeaders(),
+      })
       .pipe(catchError(this.handleError));
   }
 
@@ -159,4 +157,3 @@ export class CourseService {
     return throwError(() => new Error(errorMessage));
   }
 }
-
