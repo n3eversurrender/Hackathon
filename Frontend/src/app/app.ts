@@ -8,5 +8,5 @@ import { ToastComponent } from './shared/components/toast.component';
   templateUrl: './app.html',
 })
 export class App {
-  protected readonly title = signal('Frontend');
+  protected readonly title = signal('SATE-QU');
 }
