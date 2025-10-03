@@ -6,6 +6,8 @@ import { ConfirmationModalComponent } from '../../shared/components/confirmation
 import { MainLayoutComponent } from '../../shared/layouts/main-layout/main-layout.component';
 import { ToastService } from '../../shared/toast.service';
 import { AuthService } from '../auth/auth.service';
+import { CourseSchedule, DAY_NAMES } from './course-schedule.model';
+import { CourseScheduleService } from './course-schedule.service';
 import { Course } from './course.model';
 import { CourseService } from './course.service';
 
@@ -26,9 +28,18 @@ export class ManageClassesComponent implements OnInit {
   showDeleteModal: boolean = false;
   classToDelete: Course | null = null;
 
+  // Schedule modal states
+  showScheduleModal: boolean = false;
+  isEditScheduleMode: boolean = false;
+  scheduleModalTitle: string = 'Tambah Jadwal';
+  showDeleteScheduleModal: boolean = false;
+  scheduleToDelete: CourseSchedule | null = null;
+  currentCourseId: number = 0;
+
   // Loading states
   isLoading: boolean = false;
   isSaving: boolean = false;
+  isLoadingSchedules: Record<number, boolean> = {};
 
   // Form data
   formData: {
@@ -41,6 +52,19 @@ export class ManageClassesComponent implements OnInit {
     code: '',
   };
 
+  // Schedule form data
+  scheduleFormData: {
+    id: number;
+    day_of_week: number;
+    start_time: string;
+    end_time: string;
+  } = {
+    id: 0,
+    day_of_week: 1,
+    start_time: '',
+    end_time: '',
+  };
+
   // Search
   searchText: string = '';
 
@@ -49,9 +73,17 @@ export class ManageClassesComponent implements OnInit {
   filteredClasses: Course[] = [];
   activeMenu: string = 'kelola-kelas';
 
+  // Expanded classes and their schedules
+  expandedClasses = new Set<number>();
+  classSchedules: Record<number, CourseSchedule[]> = {};
+
+  // Day names for display
+  dayNames = DAY_NAMES;
+
   constructor(
     private router: Router,
     private courseService: CourseService,
+    private courseScheduleService: CourseScheduleService,
     private toastService: ToastService,
     private authService: AuthService,
   ) {}
@@ -103,7 +135,6 @@ export class ManageClassesComponent implements OnInit {
         // Backend returns data with structure: { count: number, courses: Course[] }
         this.classes = response.data.courses;
         this.filteredClasses = [...this.classes];
-        this.toastService.success(`${this.classes.length} kelas berhasil dimuat`, 'Data Dimuat');
       },
       error: (error) => {
         this.isLoading = false;
@@ -170,7 +201,7 @@ export class ManageClassesComponent implements OnInit {
           code: this.formData.code,
         })
         .subscribe({
-          next: (response) => {
+          next: (_response) => {
             this.isSaving = false;
             this.toastService.success('Kelas berhasil diupdate!', 'Berhasil');
             this.loadClasses();
@@ -189,7 +220,7 @@ export class ManageClassesComponent implements OnInit {
           code: this.formData.code,
         })
         .subscribe({
-          next: (response) => {
+          next: (_response) => {
             this.isSaving = false;
             this.toastService.success('Kelas berhasil ditambahkan!', 'Berhasil');
             this.loadClasses();
@@ -212,7 +243,7 @@ export class ManageClassesComponent implements OnInit {
     if (!this.classToDelete) return;
 
     this.courseService.deleteCourse(this.classToDelete.id).subscribe({
-      next: (response) => {
+      next: (_response) => {
         this.toastService.success('Kelas berhasil dihapus!', 'Berhasil');
         this.loadClasses();
         this.showDeleteModal = false;
@@ -229,5 +260,191 @@ export class ManageClassesComponent implements OnInit {
   cancelDelete(): void {
     this.showDeleteModal = false;
     this.classToDelete = null;
+  }
+
+  // ========== Schedule Management ==========
+
+  toggleExpand(courseId: number): void {
+    if (this.expandedClasses.has(courseId)) {
+      this.expandedClasses.delete(courseId);
+    } else {
+      this.expandedClasses.add(courseId);
+      this.loadSchedules(courseId);
+    }
+  }
+
+  isExpanded(courseId: number): boolean {
+    return this.expandedClasses.has(courseId);
+  }
+
+  loadSchedules(courseId: number): void {
+    if (this.classSchedules[courseId]) {
+      return; // Already loaded
+    }
+
+    this.isLoadingSchedules[courseId] = true;
+    this.courseScheduleService.getSchedulesByCourse(courseId).subscribe({
+      next: (response) => {
+        this.isLoadingSchedules[courseId] = false;
+        this.classSchedules[courseId] = response.data.schedules.sort(
+          (a, b) => a.day_of_week - b.day_of_week,
+        );
+        // Don't show success toast for loading data (too noisy)
+      },
+      error: (error) => {
+        this.isLoadingSchedules[courseId] = false;
+        // Only show error toast if it's a real error, not just empty data
+        // 404 might mean the endpoint doesn't exist, but empty array is handled by empty state UI
+        if (error.status !== 404) {
+          this.toastService.error(error.message, 'Gagal Memuat Jadwal');
+        }
+        // Set empty array so UI shows empty state instead of loading forever
+        this.classSchedules[courseId] = [];
+      },
+    });
+  }
+
+  openAddScheduleModal(courseId: number): void {
+    this.currentCourseId = courseId;
+    this.isEditScheduleMode = false;
+    this.scheduleModalTitle = 'Tambah Jadwal';
+    this.scheduleFormData = {
+      id: 0,
+      day_of_week: 1,
+      start_time: '',
+      end_time: '',
+    };
+    this.showScheduleModal = true;
+  }
+
+  openEditScheduleModal(courseId: number, schedule: CourseSchedule): void {
+    this.currentCourseId = courseId;
+    this.isEditScheduleMode = true;
+    this.scheduleModalTitle = 'Edit Jadwal';
+    this.scheduleFormData = {
+      id: schedule.id,
+      day_of_week: schedule.day_of_week,
+      start_time: schedule.start_time,
+      end_time: schedule.end_time,
+    };
+    this.showScheduleModal = true;
+  }
+
+  closeScheduleModal(): void {
+    this.showScheduleModal = false;
+    this.scheduleFormData = {
+      id: 0,
+      day_of_week: 1,
+      start_time: '',
+      end_time: '',
+    };
+  }
+
+  saveSchedule(): void {
+    if (!this.scheduleFormData.start_time || !this.scheduleFormData.end_time) {
+      this.toastService.warning('Harap isi semua field!', 'Perhatian');
+      return;
+    }
+
+    this.isSaving = true;
+
+    if (this.isEditScheduleMode) {
+      // Update existing schedule
+      this.courseScheduleService
+        .updateSchedule(this.currentCourseId, this.scheduleFormData.id, {
+          day_of_week: this.scheduleFormData.day_of_week,
+          start_time: this.scheduleFormData.start_time,
+          end_time: this.scheduleFormData.end_time,
+        })
+        .subscribe({
+          next: (_response) => {
+            this.isSaving = false;
+            this.toastService.success('Jadwal berhasil diupdate!', 'Berhasil');
+            delete this.classSchedules[this.currentCourseId]; // Clear cache
+            this.loadSchedules(this.currentCourseId); // Reload
+            this.closeScheduleModal();
+          },
+          error: (error) => {
+            this.isSaving = false;
+            this.toastService.error(error.message, 'Gagal Update');
+          },
+        });
+    } else {
+      // Add new schedule
+      this.courseScheduleService
+        .createSchedule(this.currentCourseId, {
+          day_of_week: this.scheduleFormData.day_of_week,
+          start_time: this.scheduleFormData.start_time,
+          end_time: this.scheduleFormData.end_time,
+        })
+        .subscribe({
+          next: (_response) => {
+            this.isSaving = false;
+            this.toastService.success('Jadwal berhasil ditambahkan!', 'Berhasil');
+            delete this.classSchedules[this.currentCourseId]; // Clear cache
+            this.loadSchedules(this.currentCourseId); // Reload
+            this.closeScheduleModal();
+          },
+          error: (error) => {
+            this.isSaving = false;
+            this.toastService.error(error.message, 'Gagal Menambah');
+          },
+        });
+    }
+  }
+
+  openDeleteScheduleModal(courseId: number, schedule: CourseSchedule): void {
+    this.currentCourseId = courseId;
+    this.scheduleToDelete = schedule;
+    this.showDeleteScheduleModal = true;
+  }
+
+  confirmDeleteSchedule(): void {
+    if (!this.scheduleToDelete) return;
+
+    this.courseScheduleService
+      .deleteSchedule(this.currentCourseId, this.scheduleToDelete.id)
+      .subscribe({
+        next: (_response) => {
+          this.toastService.success('Jadwal berhasil dihapus!', 'Berhasil');
+          delete this.classSchedules[this.currentCourseId]; // Clear cache
+          this.loadSchedules(this.currentCourseId); // Reload
+          this.showDeleteScheduleModal = false;
+          this.scheduleToDelete = null;
+        },
+        error: (error) => {
+          this.toastService.error(error.message, 'Gagal Menghapus');
+          this.showDeleteScheduleModal = false;
+          this.scheduleToDelete = null;
+        },
+      });
+  }
+
+  cancelDeleteSchedule(): void {
+    this.showDeleteScheduleModal = false;
+    this.scheduleToDelete = null;
+  }
+
+  getSchedulesForCourse(courseId: number): CourseSchedule[] {
+    return this.classSchedules[courseId] || [];
+  }
+
+  // Format time from HH:MM:SS to HH:MM AM/PM
+  formatTime(time: string): string {
+    if (!time) return '';
+    // If time is in format HH:MM:SS, remove seconds and add AM/PM
+    const parts = time.split(':');
+    if (parts.length >= 2) {
+      let hours = parseInt(parts[0], 10);
+      const minutes = parts[1];
+      const ampm = hours >= 12 ? 'PM' : 'AM';
+
+      // Convert to 12-hour format
+      hours = hours % 12;
+      hours = hours ? hours : 12; // 0 should be 12
+
+      return `${hours.toString().padStart(2, '0')}:${minutes} ${ampm}`;
+    }
+    return time;
   }
 }
