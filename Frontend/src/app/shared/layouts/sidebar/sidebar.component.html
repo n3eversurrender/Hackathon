@@ -108,3 +108,15 @@
     <span class="font-medium">Keluar</span>
   </button>
 </aside>
+
+<!-- Logout Confirmation Modal -->
+<app-confirmation-modal
+  [isOpen]="showLogoutModal"
+  [title]="'Konfirmasi Logout'"
+  [message]="'Apakah Anda yakin ingin keluar dari sistem? Semua data session akan dihapus.'"
+  [confirmText]="'Ya, Keluar'"
+  [cancelText]="'Batal'"
+  [type]="'warning'"
+  (confirm)="confirmLogout()"
+  (cancel)="cancelLogout()"
+></app-confirmation-modal>

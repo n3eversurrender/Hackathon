@@ -1,25 +1,27 @@
 import { CommonModule } from '@angular/common';
 import { Component, Input, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
-import { AuthService } from '../../../features/auth/auth.service';
 import { User } from '../../../features/auth/auth.model';
+import { AuthService } from '../../../features/auth/auth.service';
+import { ConfirmationModalComponent } from '../../components/confirmation-modal.component';
 import { ToastService } from '../../toast.service';
 
 @Component({
   selector: 'app-sidebar',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, ConfirmationModalComponent],
   templateUrl: './sidebar.component.html',
 })
 export class SidebarComponent implements OnInit {
   @Input() activeMenu: string = '';
   currentUser: User | null = null;
   isAdmin: boolean = false;
+  showLogoutModal = false;
 
   constructor(
     private router: Router,
     private authService: AuthService,
-    private toastService: ToastService
+    private toastService: ToastService,
   ) {}
 
   ngOnInit(): void {
@@ -32,10 +34,7 @@ export class SidebarComponent implements OnInit {
   setActiveMenu(menu: string): void {
     // Check role access for manage-users (admin only)
     if (menu === 'kelola-user' && !this.isAdmin) {
-      this.toastService.error(
-        'Hanya Admin yang dapat mengakses halaman ini!',
-        'Akses Ditolak!'
-      );
+      this.toastService.error('Hanya Admin yang dapat mengakses halaman ini!', 'Akses Ditolak!');
       return;
     }
 
@@ -55,9 +54,20 @@ export class SidebarComponent implements OnInit {
   }
 
   logout(): void {
-    if (confirm('Apakah Anda yakin ingin keluar?')) {
-      this.authService.logout();
-      this.toastService.info('Anda telah keluar dari sistem.', 'Logout Berhasil!');
-    }
+    this.showLogoutModal = true;
+  }
+
+  confirmLogout(): void {
+    this.showLogoutModal = false;
+    // Clear all sessions and local storage
+    localStorage.clear();
+    sessionStorage.clear();
+    
+    this.authService.logout();
+    this.toastService.success('Anda telah keluar dari sistem.', 'Logout Berhasil!');
+  }
+
+  cancelLogout(): void {
+    this.showLogoutModal = false;
   }
 }
