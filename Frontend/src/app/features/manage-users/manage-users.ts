@@ -2,6 +2,7 @@ import { CommonModule } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
+import { MainLayoutComponent } from '../../shared/layouts/main-layout/main-layout.component';
 
 interface User {
   id: number;
@@ -15,7 +16,7 @@ interface User {
 @Component({
   selector: 'app-manage-users',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, MainLayoutComponent],
   templateUrl: './manage-users.html',
 })
 export class ManageUsersComponent implements OnInit {
@@ -85,7 +86,7 @@ export class ManageUsersComponent implements OnInit {
   ];
 
   filteredUsers: User[] = [];
-  activeMenu: string = 'kelola-kelas';
+  activeMenu: string = 'kelola-user';
 
   constructor(private router: Router) {}
 
@@ -120,21 +121,6 @@ export class ManageUsersComponent implements OnInit {
     const minutes = String(now.getMinutes()).padStart(2, '0');
 
     this.currentDate = `${dayName}, ${day} ${month} ${year} ${hours}:${minutes}`;
-  }
-
-  setActiveMenu(menu: string): void {
-    this.activeMenu = menu;
-    if (menu === 'beranda') {
-      this.router.navigate(['/dashboard']);
-    } else if (menu === 'kelola-kelas') {
-      this.router.navigate(['/manage-classes']);
-    } else if (menu === 'generate-absen') {
-      this.router.navigate(['/generate-absen']);
-    } else if (menu === 'riwayat-absen') {
-      this.router.navigate(['/attendance-history']);
-    } else if (menu === 'pengaturan') {
-      this.router.navigate(['/settings']);
-    }
   }
 
   filterUsers(): void {
@@ -214,12 +200,6 @@ export class ManageUsersComponent implements OnInit {
       this.users = this.users.filter((u) => u.id !== user.id);
       this.filteredUsers = [...this.users];
       alert('User berhasil dihapus!');
-    }
-  }
-
-  logout(): void {
-    if (confirm('Apakah Anda yakin ingin keluar?')) {
-      this.router.navigate(['/login']);
     }
   }
 }
