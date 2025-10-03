@@ -2,6 +2,7 @@ import { CommonModule } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
+import { MainLayoutComponent } from '../../shared/layouts/main-layout/main-layout.component';
 
 interface UserProfile {
   name: string;
@@ -14,7 +15,7 @@ interface UserProfile {
 @Component({
   selector: 'app-settings',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, MainLayoutComponent],
   templateUrl: './settings.html',
 })
 export class SettingsComponent implements OnInit {
@@ -86,21 +87,6 @@ export class SettingsComponent implements OnInit {
     this.currentDate = `${dayName}, ${day} ${month} ${year} ${hours}:${minutes}`;
   }
 
-  setActiveMenu(menu: string): void {
-    this.activeMenu = menu;
-    if (menu === 'beranda') {
-      this.router.navigate(['/dashboard']);
-    } else if (menu === 'kelola-kelas') {
-      this.router.navigate(['/manage-classes']);
-    } else if (menu === 'kelola-user') {
-      this.router.navigate(['/manage-users']);
-    } else if (menu === 'generate-absen') {
-      this.router.navigate(['/generate-absen']);
-    } else if (menu === 'riwayat-absen') {
-      this.router.navigate(['/attendance-history']);
-    }
-  }
-
   setActiveTab(tab: string): void {
     this.activeTab = tab;
   }
@@ -143,11 +129,5 @@ export class SettingsComponent implements OnInit {
 
   saveNotificationSettings(): void {
     alert('Pengaturan notifikasi berhasil disimpan!');
-  }
-
-  logout(): void {
-    if (confirm('Apakah Anda yakin ingin keluar?')) {
-      this.router.navigate(['/login']);
-    }
   }
 }

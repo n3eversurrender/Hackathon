@@ -2,6 +2,7 @@ import { CommonModule } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
+import { MainLayoutComponent } from '../../shared/layouts/main-layout/main-layout.component';
 
 interface AttendanceRecord {
   id: number;
@@ -19,7 +20,7 @@ interface AttendanceRecord {
 @Component({
   selector: 'app-attendance-history',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, MainLayoutComponent],
   templateUrl: './attendance-history.html',
 })
 export class AttendanceHistoryComponent implements OnInit {
@@ -298,21 +299,6 @@ export class AttendanceHistoryComponent implements OnInit {
     alert('Laporan berhasil diunduh!');
   }
 
-  setActiveMenu(menu: string): void {
-    this.activeMenu = menu;
-    if (menu === 'beranda') {
-      this.router.navigate(['/dashboard']);
-    } else if (menu === 'kelola-kelas') {
-      this.router.navigate(['/manage-classes']);
-    } else if (menu === 'kelola-user') {
-      this.router.navigate(['/manage-users']);
-    } else if (menu === 'generate-absen') {
-      this.router.navigate(['/generate-absen']);
-    } else if (menu === 'pengaturan') {
-      this.router.navigate(['/settings']);
-    }
-  }
-
   getStatusClass(status: string): string {
     switch (status) {
       case 'Hadir':
@@ -323,12 +309,6 @@ export class AttendanceHistoryComponent implements OnInit {
         return 'bg-red-100 text-red-800';
       default:
         return 'bg-gray-100 text-gray-800';
-    }
-  }
-
-  logout(): void {
-    if (confirm('Apakah Anda yakin ingin keluar?')) {
-      this.router.navigate(['/login']);
     }
   }
 }
