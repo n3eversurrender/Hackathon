@@ -1,0 +1,220 @@
+<div class="h-screen bg-gray-50 overflow-y-auto">
+  <!-- Header Section -->
+  <div class="sticky top-0 z-10 bg-white px-4 py-3 shadow-sm">
+    <div class="flex items-center justify-between">
+      <button (click)="goBack()" class="text-[#7D2E2E] flex items-center space-x-1">
+        <svg
+          class="w-5 h-5"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+          xmlns="http://www.w3.org/2000/svg"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M15 19l-7-7 7-7"
+          ></path>
+        </svg>
+        <span class="font-medium text-sm">Kembali</span>
+      </button>
+      <h2 class="text-lg font-bold text-black">Riwayat Absensi</h2>
+      <div class="w-12"></div>
+    </div>
+  </div>
+
+  <!-- Filter Section -->
+  <div class="px-4 py-3 bg-white border-b border-gray-200">
+    <div class="flex space-x-3 mb-3">
+      <!-- Status Filter -->
+      <select
+        [(ngModel)]="selectedFilter"
+        (change)="onFilterChange()"
+        class="flex-1 bg-white border-2 border-[#7D2E2E] rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#7D2E2E]"
+      >
+        <option value="all">Semua Status</option>
+        <option value="present">Hadir</option>
+        <option value="late">Terlambat</option>
+        <option value="absent">Tidak Hadir</option>
+      </select>
+
+      <!-- Period Filter -->
+      <select
+        [(ngModel)]="selectedPeriod"
+        (change)="onPeriodChange()"
+        class="flex-1 bg-white border-2 border-[#7D2E2E] rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#7D2E2E]"
+      >
+        <option value="week">Seminggu</option>
+        <option value="month">Sebulan</option>
+        <option value="all">Semua</option>
+      </select>
+    </div>
+  </div>
+
+  <!-- Stats Summary -->
+  <div class="px-4 py-3">
+    <div class="bg-white rounded-lg p-4 border-2 border-[#7D2E2E]">
+      <h3 class="text-[#7D2E2E] font-bold text-sm mb-3">Ringkasan</h3>
+      <div class="grid grid-cols-3 gap-4">
+        <div class="text-center">
+          <div class="text-2xl font-bold text-green-600">{{ getAttendanceStats().present }}</div>
+          <div class="text-xs text-green-600">Hadir</div>
+        </div>
+        <div class="text-center">
+          <div class="text-2xl font-bold text-orange-600">{{ getAttendanceStats().late }}</div>
+          <div class="text-xs text-orange-600">Terlambat</div>
+        </div>
+        <div class="text-center">
+          <div class="text-2xl font-bold text-red-600">{{ getAttendanceStats().absent }}</div>
+          <div class="text-xs text-red-600">Tidak Hadir</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Attendance History List -->
+  <div class="px-4 py-3">
+    <div class="space-y-3">
+      <div
+        *ngFor="let record of filteredHistory"
+        class="bg-white rounded-lg p-4 border-2 border-[#7D2E2E]"
+      >
+        <div class="flex items-start justify-between mb-3">
+          <div class="flex-1">
+            <h3 class="text-[#7D2E2E] font-bold text-sm">{{ record.courseName }}</h3>
+            <p class="text-gray-600 text-xs">{{ record.courseCode }}</p>
+            <p class="text-gray-600 text-xs">{{ formatDate(record.date) }}</p>
+          </div>
+          <span
+            [class]="'px-2 py-1 rounded-full text-xs font-medium ' + getStatusColor(record.status)"
+          >
+            {{ getStatusText(record.status) }}
+          </span>
+        </div>
+
+        <div class="grid grid-cols-2 gap-4 text-xs">
+          <div>
+            <span class="text-gray-500">Waktu:</span>
+            <span class="text-[#7D2E2E] font-medium ml-1"
+              >{{ record.startTime }} - {{ record.endTime }}</span
+            >
+          </div>
+          <div>
+            <span class="text-gray-500">Absen:</span>
+            <span class="text-[#7D2E2E] font-medium ml-1">{{ formatTime(record.timestamp) }}</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Empty State -->
+      <div
+        *ngIf="filteredHistory.length === 0"
+        class="bg-white rounded-lg p-8 border-2 border-[#7D2E2E] text-center"
+      >
+        <svg
+          class="w-16 h-16 text-gray-300 mx-auto mb-4"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"
+          ></path>
+        </svg>
+        <p class="text-gray-500 text-sm">Tidak ada riwayat absensi</p>
+        <p class="text-gray-400 text-xs mt-1">Coba ubah filter atau periode</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Bottom Navigation -->
+  <div class="fixed bottom-0 left-0 right-0 bg-[#7D2E2E] px-4 py-2">
+    <div class="flex items-center justify-between">
+      <!-- Home -->
+      <button class="flex flex-col items-center space-y-0.5 px-2 py-1">
+        <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"
+          ></path>
+        </svg>
+        <span class="text-white text-xs">Beranda</span>
+      </button>
+
+      <!-- History (Active) -->
+      <button class="flex flex-col items-center space-y-0.5 px-2 py-1">
+        <svg
+          class="w-5 h-5 text-white"
+          fill="currentColor"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
+          ></path>
+        </svg>
+        <span class="text-white text-xs">Riwayat</span>
+      </button>
+
+      <!-- QR Scanner -->
+      <button class="flex flex-col items-center space-y-0.5 px-2 py-1">
+        <div class="w-8 h-8 bg-white rounded-full flex items-center justify-center">
+          <svg class="w-4 h-4 text-[#7D2E2E]" fill="currentColor" viewBox="0 0 20 20">
+            <path
+              d="M3 4a1 1 0 011-1h2a1 1 0 011 1v2a1 1 0 01-1 1H4a1 1 0 01-1-1V4zM3 10a1 1 0 011-1h2a1 1 0 011 1v2a1 1 0 01-1 1H4a1 1 0 01-1-1v-10zM8 4a1 1 0 011-1h2a1 1 0 011 1v2a1 1 0 01-1 1H9a1 1 0 01-1-1V4zM8 10a1 1 0 011-1h2a1 1 0 011 1v2a1 1 0 01-1 1H9a1 1 0 01-1-1v-2zM13 4a1 1 0 011-1h2a1 1 0 011 1v2a1 1 0 01-1 1h-2a1 1 0 01-1-1V4zM13 10a1 1 0 011-1h2a1 1 0 011 1v2a1 1 0 01-1 1h-2a1 1 0 01-1-1v-2zM16 14a1 1 0 011-1h1a1 1 0 011 1v1a1 1 0 01-1 1h-1a1 1 0 01-1-1v-1zM3 14a1 1 0 011-1h1a1 1 0 011 1v1a1 1 0 01-1 1H4a1 1 0 01-1-1v-1zM8 14a1 1 0 011-1h2a1 1 0 011 1v2a1 1 0 01-1 1H9a1 1 0 01-1-1v-2z"
+            ></path>
+          </svg>
+        </div>
+        <span class="text-white text-xs">Scan QR</span>
+      </button>
+
+      <!-- Profile -->
+      <button class="flex flex-col items-center space-y-0.5 px-2 py-1">
+        <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
+          ></path>
+        </svg>
+        <span class="text-white text-xs">Profil</span>
+      </button>
+
+      <!-- Logout -->
+      <button class="flex flex-col items-center space-y-0.5 px-2 py-1">
+        <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"
+          ></path>
+        </svg>
+        <span class="text-white text-xs">Keluar</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- Add bottom padding to prevent content from being hidden behind navigation -->
+  <div class="h-16"></div>
+
+  <!-- Bottom Navigation -->
+  <app-student-bottom-navigation
+    [activePage]="activePage"
+    (navigateToDashboard)="onNavigateToDashboard()"
+    (navigateToHistory)="onNavigateToHistory()"
+    (openQRScanner)="onOpenQRScanner()"
+    (navigateToProfile)="onNavigateToProfile()"
+    (logout)="onLogout()"
+  ></app-student-bottom-navigation>
+</div>
