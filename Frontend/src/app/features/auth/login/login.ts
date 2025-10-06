@@ -58,24 +58,22 @@ export class LoginComponent {
           if (response.data && typeof response.data === 'object' && 'user' in response.data) {
             const user = response.data.user;
 
-            // Check if user has access (only admin and lecturer)
-            if (user.role === 0 || user.role === 2) {
-              // role 0 = admin, role 2 = lecturer
-              this.toastService.success(`Selamat datang, ${user.name}!`, 'Login Berhasil!');
+            // Redirect based on user role
+            this.toastService.success(`Selamat datang, ${user.name}!`, 'Login Berhasil!');
 
-              // Redirect admin users to manage-users page, others to dashboard
-              if (user.role === 0) {
-                this.router.navigate(['/manage-users']);
-              } else {
-                this.router.navigate(['/dashboard']);
-              }
+            if (user.role === 0) {
+              // Admin - redirect to manage users
+              this.router.navigate(['/manage-users']);
+            } else if (user.role === 1) {
+              // Student - redirect to student dashboard
+              this.router.navigate(['/student-dashboard']);
+            } else if (user.role === 2) {
+              // Lecturer - redirect to dashboard
+              this.router.navigate(['/dashboard']);
             } else {
-              // Student tidak boleh login
+              // Unknown role
               this.authService.logout();
-              this.toastService.error(
-                'Hanya Admin dan Dosen yang dapat mengakses sistem ini.',
-                'Akses Ditolak!',
-              );
+              this.toastService.error('Role pengguna tidak valid.', 'Akses Ditolak!');
             }
           }
         },

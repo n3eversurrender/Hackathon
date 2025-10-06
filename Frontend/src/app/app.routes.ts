@@ -9,10 +9,14 @@ import { GenerateAbsenComponent } from './features/generate-absen/generate-absen
 import { ManageClassesComponent } from './features/manage-classes/manage-classes';
 import { ManageUsersComponent } from './features/manage-users/manage-users';
 import { SettingsComponent } from './features/settings/settings';
+import { StudentDashboardComponent } from './features/student-dashboard/student-dashboard';
+import { StudentHistoryComponent } from './features/student-history/student-history';
+import { StudentProfileComponent } from './features/student-profile/student-profile';
 
 // Role constants based on backend
 // 0 = Admin, 1 = Student, 2 = Lecturer
 const ADMIN = 0;
+const STUDENT = 1;
 const LECTURER = 2;
 
 export const routes: Routes = [
@@ -23,6 +27,21 @@ export const routes: Routes = [
     path: 'dashboard',
     component: DashboardComponent,
     canActivate: [authGuard, roleGuard([ADMIN, LECTURER])],
+  },
+  {
+    path: 'student-dashboard',
+    component: StudentDashboardComponent,
+    canActivate: [authGuard, roleGuard([STUDENT])],
+  },
+  {
+    path: 'student-history',
+    component: StudentHistoryComponent,
+    canActivate: [authGuard, roleGuard([STUDENT])],
+  },
+  {
+    path: 'student-profile',
+    component: StudentProfileComponent,
+    canActivate: [authGuard, roleGuard([STUDENT])],
   },
   {
     path: 'manage-users',
